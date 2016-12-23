@@ -1,5 +1,6 @@
 const roleHarvester = require('role.harvester');
 const structureBase = require('structure.base');
+const ActionManager = require('actionManager');
 
 let ROLE = {
     HARVESTER: {
@@ -7,7 +8,8 @@ let ROLE = {
         parts: [WORK,CARRY,MOVE,WORK,CARRY,CARRY,MOVE,MOVE],
         minParts: 3,
         min: 4,
-        validStructs: [STRUCTURE_SPAWN, STRUCTURE_EXTENSION]
+        validStructs: [STRUCTURE_SPAWN, STRUCTURE_EXTENSION],
+        actions: [ ActionManager.HARVEST ]
     },
     MINER: {
         id: "MINER",
@@ -16,7 +18,7 @@ let ROLE = {
         min: 6,
         validStructs: [STRUCTURE_CONTAINER]
     }
-    //GOPHER
+    // GOPHER
 }
 
 let STRUCTURES = {
@@ -46,6 +48,7 @@ module.exports.loop = function () {
         switch(role){
             case ROLE.MINER.id:
             case ROLE.HARVESTER.id:
+              ActionManager.run(creep, ROLE[role].actions);
                 unitCount[ role ]++;
                 roleHarvester.run(creep, unitCount[ role ] % 2, ROLE[role].validStructs);
                 break;
