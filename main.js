@@ -1,82 +1,97 @@
-const roleHarvester = require('role.harvester');
-const structureBase = require('structure.base');
-const ActionManager = require('actionManager');
+const SpawnManager = require('spawn.manager');
+const ActionManager = require('action.manager');
+const { UNIT_TYPES } = require('units.manager');
+const HiveMind = require('hivemind');
+const { 
+	UNITS: {
+		DEFAULT, 
+		HARVESTER, RUNNER, 
+		MINER, REMOTE_MINER,
+		BUILDER, REMOTE_BUILDER,
+		BOWMAN, RAIDER,
+		EXPLORER, SETTLER, 
+		MEDIC,
+	},
+	ACTIONS: {
+		MINING, TRANSFER, UPGRADE, BUILD, STORE, SCAVENGE, DROP, REPAIR, WITHDRAW, 
+		DROP_OFF, 
+		GO_HOME, 
+		EXPLORE, SETTLE, 
+		HUNT, GOTO_BATTLEZONE,
+		FIND_MINING_SITE, 
+		ADD_ROAD, CALL_WORKER,
+		GOTO_WORKSITE, PARTY_UP,
+		HEALUP,
+		HEALING,
+		PASS
+	},
+} = require('constants');
 
-let ROLE = {
-    HARVESTER: {
-        id: "HARVESTER",
-        parts: [WORK,CARRY,MOVE,WORK,CARRY,CARRY,MOVE,MOVE],
-        minParts: 3,
-        min: 4,
-        validStructs: [STRUCTURE_SPAWN, STRUCTURE_EXTENSION],
-        actions: [ ActionManager.HARVEST ]
-    },
-    MINER: {
-        id: "MINER",
-        parts: [WORK,CARRY,MOVE,WORK,CARRY,CARRY,MOVE,CARRY,MOVE,MOVE],
-        minParts: 9,
-        min: 6,
-        validStructs: [STRUCTURE_CONTAINER]
-    }
-    // GOPHER
+const setupRooms = () => {
+	Memory.roomsToExplore = Memory.roomsToExplore || [];
+	Memory.exploredRooms = Memory.exploredRooms || [];//[ homeRoom ];
+	Memory.botRooms = Memory.botRooms || [];
+	Memory.playerRooms = Memory.playerRooms || [];
+	Memory.battleFields = Memory.battleFields || [];
+	Memory.quarry = Memory.quarry || {};//["W2N4","W3N5", "W1N4", "W2N3","W2N6"] || Memory.quarry || [];
+	Memory.worksites = Memory.worksites || [];
+	Memory.uplinks = Memory.uplinks || {};
+	Memory.downlinks = Memory.downlinks || {};
+	Memory.terminals = Memory.terminals || {};
+
+	// const homeRoom = Game.spawns[homeName].room.name;
+	// const roomIndex = Memory.worksites.indexOf( homeRoom );
+	// if(roomIndex >= 0){
+	// 	Memory.worksites.splice(roomIndex,1);
+	// }
 }
+module.exports.loop = () => {
+	// const homeBase = Game.spawns[homeName];
+	setupRooms();
 
-let STRUCTURES = {
-    [STRUCTURE_EXTENSION]: 5
-}
+	let creep; 
+	let actions;
+	for(let index in Memory.creeps) {
+		creep = Game.creeps[index];
 
-const homeName = "Skynet";
+		//Garbage collection
+		if(!creep){
+			delete Memory.creeps[index];
+			continue;
+		}
 
-module.exports.loop = function () {
-    const homeBase = Game.spawns[homeName];
-    let unitCount = {}
-    //Setup unit counting
-    for(const role in ROLE) {
-        let { id } = ROLE[ role ];
-        unitCount[ id ] = 0;
-    }
-    //Set all creep actions
-    let creep;
-    for(const name in Memory.creeps) {
-        creep = Game.creeps[name];
-        //Garbage collection
-        if(!creep){
-            delete Memory.creeps[name];
-            continue;
-        }
-        let { role } = creep.memory;
-        switch(role){
-            case ROLE.MINER.id:
-            case ROLE.HARVESTER.id:
-              ActionManager.run(creep, ROLE[role].actions);
-                unitCount[ role ]++;
-                roleHarvester.run(creep, unitCount[ role ] % 2, ROLE[role].validStructs);
-                break;
-            default:
-                creep.memory.role = ROLE.HARVESTER.id;
-                roleHarvester.run(creep, unitCount[ role ] % 2, ROLE.HARVESTER.validStructs);
-        }
-    }
-    //Build my bases
-    for(const name in Game.spawns){
-        structureBase.run( Game.spawns[name] );
-    }
+		// creep.suicide();
+		/*const { name, memory: { role, home }} = creep;
 
-    //Report number of creeps and spawn more creeps
-    let viable;
-    for(const role in ROLE) {
-        const { id, min, parts, minParts } = ROLE[ role ];
-        const count = unitCount[ id ];
-        if(count < min){
-            viable = parts;
-            while(homeBase.canCreateCreep(viable) != OK && viable.length > Math.min(minParts,parts.length)){
-                viable = viable.slice(0, -1);
-            }
+		//Assign Job
+		switch(role){
+			case UNITS.REMOTE_BUILDER:
+				// if(unitCount[role] % 4 == 0){
+				// 	actions = [ACTIONS.WITHDRAW, ACTIONS.SCAVENGE, ACTIONS.GOTO_WORKSITE, ACTIONS.REPAIR, ACTIONS.UPGRADE, ACTIONS.CALL_WORKER];
+				// }
+				break;
+			case UNITS.REMOTE_MINER:
+				// props = {
+				// 	minerIndex: unitCount[role]
+				// }
+				break;
+			case UNITS.RUNNER:
+				// actions = unitCount[role] % 2 ? 
+				// 	[ACTIONS.SCAVENGE, ACTIONS.SEND_LINK, ACTIONS.TRANSFER, ACTIONS.STORE, ACTIONS.PASS] : 
+				// 	[ACTIONS.SCAVENGE, ACTIONS.SEND_LINK, ACTIONS.STORE, ACTIONS.TRANSFER, ACTIONS.PASS];
+				break;
+			case DEFAULT:
+				actions = (UNIT_TYPES[ role ])
+		}
+		// actions = UNIT_TYPES[ creep.memory.role || DEFAULT ].actions;
+		*/
+	}
 
-            if(homeBase.canCreateCreep(viable) === OK){
-                const newName = homeBase.createCreep(viable, undefined, {role: id});
-                console.log("Spawning new "+id+": " + newName, viable,"["+viable.length+"]");
-            }
-        }
-    }
+	//Oversoul
+	HiveMind.handleTasks();
+	
+	//Manage Spawns
+	for( let name in Game.spawns ){
+		SpawnManager.run( Game.spawns[name] );
+	}
 }
