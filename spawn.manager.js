@@ -36,7 +36,22 @@ const spawnUnits = spawn => {
 	const roomName = spawn.room.name;
 	let unitCount = {};
 	let unitTypes = Object.assign({}, UnitManager.UNIT_TYPES);
+	// let unitTypes;
 	delete unitTypes[ UNITS.DEFAULT ];
+	const buildOrder = [
+		UNITS.MINER,
+		UNITS.HARVESTER,
+		UNITS.BUILDER,
+		UNITS.RUNNER,
+		UNITS.RAIDER,
+		UNITS.SETTLER,
+		// UNITS.REMOTE_MINER,
+		UNITS.EXPLORER,
+		// UNITS.REMOTE_BUILDER,
+		UNITS.ORE_HARVESTER,
+		UNITS.MERCHANT,
+	];
+
 	for(const role in unitTypes){
 		unitCount[role] = 0;
 	}
@@ -51,22 +66,23 @@ const spawnUnits = spawn => {
 		const { name, memory: { role, home }, carry} = creep;
 
 		//Only control your own units
-		if(home != roomName){
+		if(home != roomName || buildOrder.indexOf(role) < 0){
 			continue;
 		}
 
 		//Count the unit
 		if(role != UNITS.DEFAULT){
-			unitCount[role]++;	
+			unitCount[role]++;
 		}
 		totalCreeps++;
 
 		//Assign Job
 		actions = UnitManager.UNIT_TYPES[ creep.memory.role || UNITS.DEFAULT ].actions;
+		props = {};
 		switch(role){
 			case UNITS.DEFAULT:
-				actions = totalCreeps >= 6 ? 
-					[ACTIONS.MINING, ACTIONS.SCAVENGE, ACTIONS.WITHDRAW, ACTIONS.TRANSFER, ACTIONS.UPGRADE] : 
+				actions = totalCreeps >= 6 ?
+					[ACTIONS.MINING, ACTIONS.SCAVENGE, ACTIONS.WITHDRAW, ACTIONS.TRANSFER, ACTIONS.UPGRADE] :
 					UnitManager.UNIT_TYPES[ UNITS.DEFAULT ].actions;
 				break;
 			// case UNITS.REMOTE_BUILDER:
@@ -74,27 +90,19 @@ const spawnUnits = spawn => {
 				// 	actions = [ACTIONS.WITHDRAW, ACTIONS.SCAVENGE, ACTIONS.GOTO_WORKSITE, ACTIONS.REPAIR, ACTIONS.UPGRADE, ACTIONS.CALL_WORKER];
 				// }
 				// break;
-			case UNITS.REMOTE_MINER:
-				props = {
-					minerIndex: unitCount[role]
-				}
-				// creep.say("Miner");
-				if(!creep.memory.quarry || Memory.quarry[roomName].indexOf(creep.memory.quarry) < 0){
-					creep.memory.quarry = Memory.quarry[roomName][ (unitCount[role] - 1) % Memory.quarry[roomName].length ] ;
-				}
-				break;
+
 			case UNITS.RUNNER:
-				actions = unitCount[role] % 2 ? 
-					[ACTIONS.SCAVENGE, ACTIONS.TRANSFER, ACTIONS.STORE, ACTIONS.PASS] : 
+				actions = unitCount[role] % 2 ?
+					[ACTIONS.SCAVENGE, ACTIONS.TRANSFER, ACTIONS.STORE, ACTIONS.PASS] :
 					[ACTIONS.SCAVENGE, ACTIONS.SEND_LINK, ACTIONS.STORE, ACTIONS.TRANSFER, ACTIONS.PASS];
 				break;
 			case UNITS.HARVESTER:
-				actions = unitCount[role] % 2 ? 
+				actions = unitCount[role] % 2 ?
 					[ACTIONS.WITHDRAW, ACTIONS.SCAVENGE, ACTIONS.UPGRADE] :
 					[ACTIONS.WITHDRAW, ACTIONS.SCAVENGE, ACTIONS.TRANSFER, ACTIONS.UPGRADE];
 				break;
 		}
-		
+
 		//Dump other resources
 		if(role != UNITS.ORE_HARVESTER){
 			for(let resource in carry){
@@ -109,7 +117,7 @@ const spawnUnits = spawn => {
 
 	//Starting base
 	if(totalCreeps < 4){
-		UnitManager.buildUnit({ 
+		UnitManager.buildUnit({
 			role: UNITS.DEFAULT,
 			home: roomName,
 			unitCount: totalCreeps
@@ -135,20 +143,6 @@ const spawnUnits = spawn => {
 			}
 		})[0];
 
-		const buildOrder = [
-			UNITS.MINER,
-			UNITS.HARVESTER,
-			UNITS.BUILDER,
-			UNITS.RUNNER,
-			UNITS.RAIDER,
-			UNITS.SETTLER,
-			UNITS.REMOTE_MINER,
-			UNITS.EXPLORER,
-			UNITS.REMOTE_BUILDER,
-			UNITS.ORE_HARVESTER,
-			UNITS.MERCHANT,
-		];
-
 		let role;
 		// console.log();
 		// console.log("---",spawn.name+"["+spawn.room.name+"]","---");
@@ -156,8 +150,8 @@ const spawnUnits = spawn => {
 			role = buildOrder[index];
 			switch(role){
 				case UNITS.HARVESTER:
-					minUnits = unitCount[ UNITS.BUILDER ] < unitCount[ role ] / 2 ? 
-						unitCount[ UNITS.BUILDER ] : 
+					minUnits = unitCount[ UNITS.BUILDER ] < unitCount[ role ] / 2 ?
+						unitCount[ UNITS.BUILDER ] :
 						Math.max(Math.ceil(spawn.room.controller.level * 2.5), 2);
 					break;
 				case UNITS.BUILDER:
@@ -198,8 +192,30 @@ const spawnUnits = spawn => {
 					unitCount: unitCount[role],
 					minUnits,
 				})){
-					break;
+					return;
 				};
+			}
+		}
+		// console.log("Available to fill work orders");
+		let order;
+		for(let index in Memory.workOrders){
+			order = Memory.workOrders[index];
+
+			//Someone already completed the work order
+			if(order.unitCount >= order.minUnits){
+				console.log("Work order["+order.role+"] already completed");
+				continue;
+			}
+
+			//Fill the workorder
+			if(UnitManager.buildUnit({
+				role: order.role,
+				home: roomName,
+				unitCount: order.unitCount,
+				minUnits: order.minUnits
+			})){
+				Memory.workOrders[index].unitCount++;
+				return;
 			}
 		}
 	}
@@ -269,7 +285,7 @@ const addExtensions = spawn => {
 			if(xDist + yDist == ii){
 				// console.log( ii, Math.pow(xDist, 2) + Math.pow(yDist, 2) );
 				// spawn.room.createFlag(object.x, object.y, object.x+","+object.y, colors[ii - 1]);
-				spawn.room.createConstructionSite(object.x, object.y, STRUCTURE_EXTENSION);	
+				spawn.room.createConstructionSite(object.x, object.y, STRUCTURE_EXTENSION);
 				return;
 			}
 		});
@@ -278,7 +294,7 @@ const addExtensions = spawn => {
 	// for(var name in Game.flags){
 	// 	Game.flags[name].remove();
 	// }
-	
+
 	/*
 	const constructionSites = Game.constructionSites;
 	var object;
@@ -391,7 +407,7 @@ const sendLinks = spawn => {
 	if(uplinks.length && downlinks.length){
 		const down = spawn.room.find(FIND_STRUCTURES, {
 			filter: structure => {
-				return structure.structureType == STRUCTURE_LINK && 
+				return structure.structureType == STRUCTURE_LINK &&
 					downlinks.indexOf(structure.id) >= 0 &&
 					structure.energy < structure.energyCapacity;
 			}
@@ -403,7 +419,7 @@ const sendLinks = spawn => {
 
 		const linkList = spawn.room.find(FIND_STRUCTURES, {
 			filter: structure => {
-				return structure.structureType == STRUCTURE_LINK && 
+				return structure.structureType == STRUCTURE_LINK &&
 					uplinks.indexOf(structure.id) >= 0 &&
 					structure.energy != 0;
 			}
@@ -433,7 +449,7 @@ const SpawnManager = {
 		addStorage( spawn );
 		manageTowers( spawn );
 		markQuarries( spawn );
-	
+
 		findLinks( spawn );
 		sendLinks( spawn );
 	}

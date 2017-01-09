@@ -20,7 +20,6 @@ const isStorage = structure => {
 	return structure.structureType == STRUCTURE_STORAGE;
 }
 
-
 const UTILS = {
 	isBuiltStructure,
 	isSpawn,

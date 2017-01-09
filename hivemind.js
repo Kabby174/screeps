@@ -1,11 +1,13 @@
-const { 
+const {
 	isBuiltStructure,
 	isSpawn,
 	isTerminal,
 	isContainer,
 	isStorage,
 } = require("utils");
-const { UNITS, ACTIONS } = require('constants');
+const { UNITS } = require('constants');
+const ActionManager = require('action.manager');
+const UnitManager = require('units.manager');
 
 const ROOM_TYPE = {
 	HATCHERY: "HATCHERY",
@@ -135,6 +137,7 @@ const roomStatus = () => {
 	let builtStructures;
 	let exits;
 	let exitArray;
+	let constructionSite;
 
 	for(let roomName in Game.rooms){
 		room = Game.rooms[roomName];
@@ -185,6 +188,12 @@ const roomStatus = () => {
 				exits.push( exitArray[ direction ]);
 			}
 			setRoom(roomName, ROOM_LISTS.EXITS, { exits });
+		}
+
+		if(roomMemory.MODE == ROOM_TYPE.OUTPOST){
+			if(Memory.worksites.indexOf(roomName) < 0){
+				Memory.worksites.push( roomName );
+			}
 		}
 	}
 }
@@ -252,7 +261,7 @@ const exploreRooms = () => {
 	let roomMemory;
 	for(let roomName in Memory.rooms){
 		roomMemory = getRoom(roomName);
-		
+
 		if(!roomName){
 			continue;
 		}
@@ -263,15 +272,102 @@ const exploreRooms = () => {
 
 	}
 }
+const assignWorkers = () => {
+	//REMOTE_BUILDER
+	const workers = [
+		UNITS.REMOTE_BUILDER,
+		UNITS.REMOTE_MINER,
+	];
+
+	let workOrders;
+	let unitCount = {};;
+	let creep;
+	let actions;
+	let props;
+	let minUnits;
+	let role;
+	// console.log("Worksites", Memory.worksites);
+	for(const index in workers){
+		unitCount[ workers[index] ] = 0;
+	}
+
+	for(const index in Game.creeps){
+		creep = Game.creeps[ index ];
+
+		if(workers.indexOf( creep.memory.role ) < 0){
+			continue;
+		}
+
+		const { name, memory: { role, home, destination }, carry} = creep;
+
+		actions = UnitManager.UNIT_TYPES[ role || UNITS.DEFAULT ].actions;
+		props = {};
+		switch(role){
+			case UNITS.REMOTE_BUILDER:
+				let newDestination = destination ||
+					Memory.worksites.length > 0 ?
+					Memory.worksites[ unitCount[role] % Memory.worksites.length ] :
+					home;
+				// console.log("Go to ", newDestination, unitCount[role] % Memory.worksites.length);
+				// creep.memory.destination = destination -|| Memory.
+				break;
+			case UNITS.REMOTE_MINER:
+				// props = {
+				// 	minerIndex: unitCount[role]
+				// }
+				if(!creep.memory.quarry || Memory.quarry["W2N5"].indexOf(creep.memory.quarry) < 0){
+					creep.memory.quarry = Memory.quarry["W2N5"][ (unitCount[role] - 1) % Memory.quarry["W2N5"].length ] ;
+				}
+				break;
+		}
+
+		unitCount[ role ]++;
+		ActionManager.doTasks(creep, actions, props);
+	}
+
+	//Request new work orders
+	workOrders = [];
+	for(const index in workers){
+		role = workers[index];
+		switch(role){
+			case UNITS.REMOTE_BUILDER:
+				minUnits = Memory.worksites.length * 4;
+				if(Memory.worksites.length > 0 &&
+					unitCount[ role ] < minUnits){
+					workOrders.push({
+						role,
+						unitCount: unitCount[ role ],
+						minUnits
+					});
+				}
+				break;
+			case UNITS.REMOTE_MINER:
+				minUnits = Memory.quarry["W2N5"].length;
+				if(unitCount[role] < minUnits){
+					workOrders.push({
+						role,
+						unitCount: unitCount[ role ],
+						minUnits
+					});
+				}
+				break;
+		}
+	}
+	Memory.workOrders = workOrders;
+	// console.log("Work orders", workOrders.length, workOrders[0] && workOrders[0].role );
+}
+
 const HiveMind = {
 	ROOM_LISTS,
 	ROOM_TYPE,
 	getRoom,
 	setRoom,
 	handleTasks: () => {
+		Memory.workOrders = Memory.workOrders || [];
 		roomStatus();
 		trade();
-		assignRemoteMiners();
+		assignWorkers();
+		// assignRemoteMiners();
 		exploreRooms();
 	},
 }

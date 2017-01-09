@@ -134,9 +134,11 @@ const UnitManager = {
 			console.log("UNKNOWN UNIT TYPE: ", unit.role);
 			return;
 		}
-		const { minParts, parts, role, home, unitCount, minUnits } = Object.assign({},
-			UNIT_TYPES[unit.role],
-			unit);
+		const { minParts, parts,
+			role, home, destination,
+			unitCount, minUnits } = Object.assign({},
+				UNIT_TYPES[unit.role],
+				unit);
 		const homeBase = Game.spawns[ Object.keys(Game.spawns).find(obj => {
 			return Game.spawns[obj].room.name == home;
 		}) ];
@@ -149,7 +151,8 @@ const UnitManager = {
 		if(homeBase.canCreateCreep(viable) == OK){
 			const newName = homeBase.createCreep(viable, undefined, {
 				role,
-				home
+				home,
+				destination,
 			});
 			console.log(homeBase.name,"Spawning new "+role+": " + newName,
 				"["+Math.round(viable.length / parts.length * 1000) / 10 +"%]",

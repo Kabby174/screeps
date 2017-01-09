@@ -2,23 +2,23 @@ const SpawnManager = require('spawn.manager');
 const ActionManager = require('action.manager');
 const { UNIT_TYPES } = require('units.manager');
 const HiveMind = require('hivemind');
-const { 
+const {
 	UNITS: {
-		DEFAULT, 
-		HARVESTER, RUNNER, 
+		DEFAULT,
+		HARVESTER, RUNNER,
 		MINER, REMOTE_MINER,
 		BUILDER, REMOTE_BUILDER,
 		BOWMAN, RAIDER,
-		EXPLORER, SETTLER, 
+		EXPLORER, SETTLER,
 		MEDIC,
 	},
 	ACTIONS: {
-		MINING, TRANSFER, UPGRADE, BUILD, STORE, SCAVENGE, DROP, REPAIR, WITHDRAW, 
-		DROP_OFF, 
-		GO_HOME, 
-		EXPLORE, SETTLE, 
+		MINING, TRANSFER, UPGRADE, BUILD, STORE, SCAVENGE, DROP, REPAIR, WITHDRAW,
+		DROP_OFF,
+		GO_HOME,
+		EXPLORE, SETTLE,
 		HUNT, GOTO_BATTLEZONE,
-		FIND_MINING_SITE, 
+		FIND_MINING_SITE,
 		ADD_ROAD, CALL_WORKER,
 		GOTO_WORKSITE, PARTY_UP,
 		HEALUP,
@@ -49,7 +49,7 @@ module.exports.loop = () => {
 	// const homeBase = Game.spawns[homeName];
 	setupRooms();
 
-	let creep; 
+	let creep;
 	let actions;
 	for(let index in Memory.creeps) {
 		creep = Game.creeps[index];
@@ -76,8 +76,8 @@ module.exports.loop = () => {
 				// }
 				break;
 			case UNITS.RUNNER:
-				// actions = unitCount[role] % 2 ? 
-				// 	[ACTIONS.SCAVENGE, ACTIONS.SEND_LINK, ACTIONS.TRANSFER, ACTIONS.STORE, ACTIONS.PASS] : 
+				// actions = unitCount[role] % 2 ?
+				// 	[ACTIONS.SCAVENGE, ACTIONS.SEND_LINK, ACTIONS.TRANSFER, ACTIONS.STORE, ACTIONS.PASS] :
 				// 	[ACTIONS.SCAVENGE, ACTIONS.SEND_LINK, ACTIONS.STORE, ACTIONS.TRANSFER, ACTIONS.PASS];
 				break;
 			case DEFAULT:
@@ -89,7 +89,7 @@ module.exports.loop = () => {
 
 	//Oversoul
 	HiveMind.handleTasks();
-	
+
 	//Manage Spawns
 	for( let name in Game.spawns ){
 		SpawnManager.run( Game.spawns[name] );
