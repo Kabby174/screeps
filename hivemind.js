@@ -339,12 +339,18 @@ const assignWorkers = () => {
 
 		switch(role){
 			case UNITS.REMOTE_BUILDER:
-				// console.log("Builder", unitCount[role], worksites.length, unitCount[role] % worksites.length);
-				// console.log( worksites[ unitCount[role] % worksites.length ].NAME );
-				creep.memory.destination = worksites[ unitCount[role] % worksites.length ].NAME;
+				if(worksites.length){
+					creep.memory.destination = worksites[ unitCount[role] % worksites.length ].NAME;
+				}else{
+					creep.memory.destination = creep.memory.home;
+				}
 				break;
 			case UNITS.REMOTE_MINER:
-				creep.memory.destination = quarries[ unitCount[role] % quarries.length ].NAME;
+				if(quarries.length){
+					creep.memory.destination = quarries[ unitCount[role] % quarries.length ].NAME;
+				}else{
+					creep.memory.destination = creep.memory.home;
+				}
 				break;
 		}
 
