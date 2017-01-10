@@ -120,7 +120,7 @@ const TASKS = {
 	},
 	[ACTIONS.SCAVENGE]: creep => {
 		//Pickup resources on the ground
-		if(!creep.memory.busy && _.sum(creep.carry) < (creep.carryCapacity)){
+		if(!creep.memory.busy && _.sum(creep.carry) < (creep.carryCapacity * .75)){
 			const dropped = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES);
 			if(dropped){
 				switch(creep.pickup(dropped)){
@@ -185,17 +185,22 @@ const TASKS = {
 	},
 	[ACTIONS.MINING]: creep => {
 		if(!creep.memory.busy && _.sum(creep.carry) < creep.carryCapacity){
-			const node = creep.pos.findClosestByRange(FIND_SOURCES, {
-				filter: structure => {
-					// return structure.energy != 0 && creep.memory.blocked != structure.id;
-					return creep.memory.blocked != structure.id;
-				}
-			});
-
+			const numSources = Memory.rooms[ creep.room.name ].SOURCES;
+			let node;
+			if(numSources > 1){
+				node = creep.pos.findClosestByRange(FIND_SOURCES, {
+					filter: structure => {
+						return creep.memory.blocked != structure.id;
+					}
+				});
+			}else{
+				node = creep.room.find(FIND_SOURCES)[0];
+			}
+			
 			if(node){
 				switch(creep.harvest(node)){
 					case ERR_NOT_IN_RANGE:
-						if(creep.moveTo(node) == ERR_NO_PATH && node.length > 1){
+						if(creep.moveTo(node) == ERR_NO_PATH && numSources > 1){
 							creep.memory.blocked = node.id;
 						}
 					case OK:

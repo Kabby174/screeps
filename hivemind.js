@@ -13,7 +13,7 @@ const UnitManager = require('units.manager');
 const ROOM_TYPE = {
 	HATCHERY: "HATCHERY",
 	OUTPOST: "OUTPOST",
-  HOSTILE: "HOSTILE",
+  	HOSTILE: "HOSTILE",
 }
 const ROOM_LISTS = {
 	MODE: "MODE",
