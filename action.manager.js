@@ -353,7 +353,8 @@ const TASKS = {
 			switch(creep.repair(target)){
 				case ERR_NOT_IN_RANGE:
 					creep.moveTo(target);
-				return;
+				case OK:
+					return true;
 			}
 		}
 	},
