@@ -331,7 +331,11 @@ const TASKS = {
 		if(creep.carry.energy == 0){
 			return;
 		}
-		const whiteList = [STRUCTURE_CONTAINER, STRUCTURE_ROAD, STRUCTURE_STORAGE, STRUCTURE_TOWER, STRUCTURE_LINK, STRUCTURE_EXTRACTOR, STRUCTURE_TERMINAL];
+		const whiteList = [
+			STRUCTURE_CONTAINER, STRUCTURE_ROAD, STRUCTURE_STORAGE, STRUCTURE_TOWER, 
+			STRUCTURE_LINK, STRUCTURE_EXTRACTOR, STRUCTURE_TERMINAL, 
+			STRUCTURE_WALL, STRUCTURE_RAMPART
+		];
 		const targets = creep.room.find(FIND_STRUCTURES, {
 			filter: structure => {
 				return whiteList.indexOf(structure.structureType) >= 0;
@@ -340,12 +344,25 @@ const TASKS = {
 		let repairTarget;
 		for(var name in targets){
 			repairTarget = targets[name];
-			if(repairTarget.hits < repairTarget.hitsMax){
-				switch(creep.repair(repairTarget)){
-					case ERR_NOT_IN_RANGE:
-						creep.moveTo(repairTarget);
-					return;
-				}
+			switch(repairTarget.structureType){
+				case STRUCTURE_WALL:
+				case STRUCTURE_RAMPART:
+					if(repairTarget.hits < 2000){
+						switch(creep.repair(repairTarget)){
+							case ERR_NOT_IN_RANGE:
+								creep.moveTo(repairTarget);
+							return;
+						}
+					}
+					break;
+				default:
+					if(repairTarget.hits < repairTarget.hitsMax){
+						switch(creep.repair(repairTarget)){
+							case ERR_NOT_IN_RANGE:
+								creep.moveTo(repairTarget);
+							return;
+						}
+					}
 			}
 		}
 	},
