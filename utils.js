@@ -19,6 +19,9 @@ const isContainer = structure => {
 const isStorage = structure => {
 	return structure.structureType == STRUCTURE_STORAGE;
 }
+const isEnemy = structure => {
+	return structure.structureType != STRUCTURE_KEEPER_LAIR;;
+}
 
 const UTILS = {
 	isBuiltStructure,
@@ -26,6 +29,7 @@ const UTILS = {
 	isTerminal,
 	isContainer,
 	isStorage,
+	isEnemy,
 }
 
 module.exports = UTILS;

@@ -39,6 +39,7 @@ const spawnUnits = spawn => {
 	// let unitTypes;
 	delete unitTypes[ UNITS.DEFAULT ];
 	const buildOrder = [
+		UNITS.DEFAULT,
 		UNITS.MINER,
 		UNITS.HARVESTER,
 		UNITS.BUILDER,

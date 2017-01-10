@@ -4,6 +4,7 @@ const {
 	isTerminal,
 	isContainer,
 	isStorage,
+	isEnemy,
 } = require("utils");
 const { UNITS } = require('constants');
 const ActionManager = require('action.manager');
@@ -12,6 +13,7 @@ const UnitManager = require('units.manager');
 const ROOM_TYPE = {
 	HATCHERY: "HATCHERY",
 	OUTPOST: "OUTPOST",
+  HOSTILE: "HOSTILE",
 }
 const ROOM_LISTS = {
 	MODE: "MODE",
@@ -140,6 +142,7 @@ const roomStatus = () => {
 	let exits;
 	let exitArray;
 	let constructionSite;
+  let enemyStructures;
 
 	for(let roomName in Game.rooms){
 		room = Game.rooms[roomName];
@@ -178,8 +181,12 @@ const roomStatus = () => {
 			setRoom(roomName, ROOM_LISTS.SOURCES, { count: sources.length });
 		}
 
+		enemyStructures = room.find(FIND_HOSTILE_STRUCTURES, isEnemy);
+
 		//Assign the task for each room
-		if(roomMemory.STRUCTURES && roomMemory.STRUCTURES[STRUCTURE_SPAWN] > 0){
+    if(enemyStructures.length > 0){
+      setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HOSTILE });
+    }else if(roomMemory.STRUCTURES && roomMemory.STRUCTURES[STRUCTURE_SPAWN] > 0){
 			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HATCHERY });
 		}else if(roomMemory.SOURCES > 0){
 			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.OUTPOST });
