@@ -336,33 +336,24 @@ const TASKS = {
 			STRUCTURE_LINK, STRUCTURE_EXTRACTOR, STRUCTURE_TERMINAL, 
 			STRUCTURE_WALL, STRUCTURE_RAMPART
 		];
-		const targets = creep.room.find(FIND_STRUCTURES, {
+		const target = creep.room.find(FIND_STRUCTURES, {
 			filter: structure => {
-				return whiteList.indexOf(structure.structureType) >= 0;
+				if(whiteList.indexOf(structure.structureType) >= 0){
+					switch(structure.structureType){
+						case STRUCTURE_WALL:
+						case STRUCTURE_RAMPART:
+							return structure.hits < 2000;;
+						default:
+							return structure.hits < structure.hitsMax;
+					}
+				}
 			}
-		});
-		let repairTarget;
-		for(var name in targets){
-			repairTarget = targets[name];
-			switch(repairTarget.structureType){
-				case STRUCTURE_WALL:
-				case STRUCTURE_RAMPART:
-					if(repairTarget.hits < 2000){
-						switch(creep.repair(repairTarget)){
-							case ERR_NOT_IN_RANGE:
-								creep.moveTo(repairTarget);
-							return;
-						}
-					}
-					break;
-				default:
-					if(repairTarget.hits < repairTarget.hitsMax){
-						switch(creep.repair(repairTarget)){
-							case ERR_NOT_IN_RANGE:
-								creep.moveTo(repairTarget);
-							return;
-						}
-					}
+		})[0];
+		if(target){
+			switch(creep.repair(target)){
+				case ERR_NOT_IN_RANGE:
+					creep.moveTo(target);
+				return;
 			}
 		}
 	},
