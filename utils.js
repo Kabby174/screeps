@@ -23,7 +23,7 @@ const isEnemy = structure => {
 	return structure.structureType != STRUCTURE_KEEPER_LAIR;;
 }
 
-const minStructureHealth = 5000;
+const minStructureHealth = 10000;
 const creepDamagedStructureWhitelist = [
 	STRUCTURE_CONTAINER, STRUCTURE_ROAD, STRUCTURE_STORAGE, STRUCTURE_TOWER, 
 	STRUCTURE_LINK, STRUCTURE_EXTRACTOR, STRUCTURE_TERMINAL, 
