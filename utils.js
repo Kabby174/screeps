@@ -23,6 +23,38 @@ const isEnemy = structure => {
 	return structure.structureType != STRUCTURE_KEEPER_LAIR;;
 }
 
+const minStructureHealth = 5000;
+const creepDamagedStructureWhitelist = [
+	STRUCTURE_CONTAINER, STRUCTURE_ROAD, STRUCTURE_STORAGE, STRUCTURE_TOWER, 
+	STRUCTURE_LINK, STRUCTURE_EXTRACTOR, STRUCTURE_TERMINAL, 
+	STRUCTURE_WALL, STRUCTURE_RAMPART
+];
+const isCreepDamagedStructure = structure => {
+	if(creepDamagedStructureWhitelist.indexOf(structure.structureType) >= 0){
+		switch(structure.structureType){
+			case STRUCTURE_WALL:
+			case STRUCTURE_RAMPART:
+				return structure.hits < minStructureHealth;
+			default:
+				return structure.hits < structure.hitsMax;
+		}
+	}
+}
+const towerDamagedStructureWhitelist = [
+	STRUCTURE_TOWER, STRUCTURE_WALL, STRUCTURE_RAMPART
+];
+const isTowerDamagedStructure = structure => {
+	if(towerDamagedStructureWhitelist.indexOf(structure.structureType) >= 0){
+		switch(structure.structureType){
+			case STRUCTURE_WALL:
+			case STRUCTURE_RAMPART:
+				return structure.hits < minStructureHealth;
+			default:
+				return structure.hits < structure.hitsMax;
+		}
+	}
+}
+
 const UTILS = {
 	isBuiltStructure,
 	isSpawn,
@@ -30,6 +62,7 @@ const UTILS = {
 	isContainer,
 	isStorage,
 	isEnemy,
+	isTowerDamagedStructure,
 }
 
 module.exports = UTILS;

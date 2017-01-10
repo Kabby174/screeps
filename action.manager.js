@@ -1,5 +1,7 @@
-const Constants = require('constants');
 const { UNITS, ACTIONS } = require('constants');
+const {
+	isCreepDamagedStructure,
+} = require("utils");
 const calcDist = (posA, posB) => {
 	return Math.sqrt(Math.pow(posA.x - posB.x, 2) + Math.pow(posA.y - posB.y, 2));
 }
@@ -331,23 +333,8 @@ const TASKS = {
 		if(creep.carry.energy == 0){
 			return;
 		}
-		const whiteList = [
-			STRUCTURE_CONTAINER, STRUCTURE_ROAD, STRUCTURE_STORAGE, STRUCTURE_TOWER, 
-			STRUCTURE_LINK, STRUCTURE_EXTRACTOR, STRUCTURE_TERMINAL, 
-			STRUCTURE_WALL, STRUCTURE_RAMPART
-		];
 		const target = creep.room.find(FIND_STRUCTURES, {
-			filter: structure => {
-				if(whiteList.indexOf(structure.structureType) >= 0){
-					switch(structure.structureType){
-						case STRUCTURE_WALL:
-						case STRUCTURE_RAMPART:
-							return structure.hits < 2000;;
-						default:
-							return structure.hits < structure.hitsMax;
-					}
-				}
-			}
+			filter: isCreepDamagedStructure
 		})[0];
 		if(target){
 			switch(creep.repair(target)){

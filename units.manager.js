@@ -9,7 +9,8 @@ const {
 		EXPLORER, SETTLER,
 		MEDIC,
 		MERCHANT,
-		SCIENTIST
+		SCIENTIST,
+		REPAIRMAN
 	},
 	ACTIONS: {
 		MINING, TRANSFER, UPGRADE, BUILD, STORE, SCAVENGE, DROP, REPAIR, WITHDRAW,
@@ -64,9 +65,15 @@ const UNIT_TYPES = {
 		actions: [HARVEST, STORE],
 	},
 	[BUILDER]: {
-		minUnits: 5, //MEMORY.worksites.length > 0 ? 6 : 0,
+		minUnits: 4, //MEMORY.worksites.length > 0 ? 6 : 0,
 		minParts: 3,
 		parts: [WORK, CARRY, MOVE, WORK, CARRY, MOVE, WORK, CARRY, MOVE],
+		actions: [WITHDRAW, SCAVENGE, BUILD, REPAIR, TRANSFER, UPGRADE],
+	},
+	[REPAIRMAN]: {
+		minUnits: 2, //MEMORY.worksites.length > 0 ? 6 : 0,
+		minParts: 3,
+		parts: [WORK, CARRY, MOVE, CARRY, MOVE, WORK],
 		actions: [WITHDRAW, SCAVENGE, REPAIR, BUILD, TRANSFER, UPGRADE],
 	},
 	[REMOTE_BUILDER]: {

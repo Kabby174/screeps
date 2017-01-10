@@ -1,6 +1,9 @@
 const { UNITS, ACTIONS } = require('constants');
 const UnitManager = require('units.manager');
 const ActionManager = require('action.manager');
+const {
+	isTowerDamagedStructure,
+} = require("utils");
 
 const calcMiners = spawn => {
 	const mines = spawn.room.find(FIND_SOURCES);
@@ -44,6 +47,7 @@ const spawnUnits = spawn => {
 		UNITS.HARVESTER,
 		UNITS.BUILDER,
 		UNITS.RUNNER,
+		UNITS.REPAIRMAN,
 		UNITS.RAIDER,
 		UNITS.SETTLER,
 		// UNITS.REMOTE_MINER,
@@ -312,23 +316,37 @@ const manageTowers = spawn => {
 			return structure.structureType == STRUCTURE_TOWER;
 		}
 	});
-	let myTower;
-	for(const index in towers){
-		myTower = towers[index];
-		// const targets = myTower.pos.findInRange(FIND_HOSTILE_CREEPS, 8);
-		const targets = myTower.room.find(FIND_HOSTILE_CREEPS);
-		if(targets.length > 0) {
-			myTower.attack(targets[0]);
-		}else{
-		    // const friendlies = myTower.pos.findInRange(FIND_MY_CREEPS, 8, {
-		    const friendlies = myTower.room.find(FIND_MY_CREEPS, {
-		        filter: creep => {
-		            return creep.hits < creep.hitsMax;
-		        }
-		    });
-		    if(friendlies.length > 0){
-		        myTower.heal(friendlies[0]);
-		    }
+
+	if(towers.length > 0){
+		const target = spawn.room.find(FIND_HOSTILE_CREEPS)[0];
+		const friendly = spawn.room.find(FIND_MY_CREEPS, {
+			filter: creep => {
+				return creep.hits < creep.hitsMax;
+			}
+		})[0];
+		const damagedStructure = spawn.room.find(FIND_STRUCTURES, {
+			filter: isTowerDamagedStructure
+		})[0];
+
+		if(!target && !friendly && !damagedStructure){
+			return;
+		}
+		let myTower;
+		for(const index in towers){
+			myTower = towers[index];
+			if(myTower.energy == 0){
+				continue;
+			}
+
+			if(target){
+				myTower.attack(target);	
+			}else if(friendly){
+				myTower.heal(friendly);
+			}else if(damagedStructure){
+				myTower.repair(damagedStructure);
+			}else{
+				return;
+			}
 		}
 	}
 }
