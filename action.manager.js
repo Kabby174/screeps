@@ -43,9 +43,9 @@ const TASKS = {
 		if(uplinks.length && _.sum(creep.carry) > 0){
 			const linkList = creep.room.find(FIND_STRUCTURES, {
 				filter: structure => {
-					return structure.structureType == STRUCTURE_LINK && 
+					return structure.structureType == STRUCTURE_LINK &&
 						uplinks.indexOf(structure.id) >= 0 &&
-						calcDist(structure.pos, creep.pos) < 10 && 
+						calcDist(structure.pos, creep.pos) < 10 &&
 						structure.energy < structure.energyCapacity;
 				}
 			});
@@ -61,9 +61,9 @@ const TASKS = {
 		if(downlinks.length && _.sum(creep.carry) < creep.carryCapacity){
 			const linkList = creep.room.find(FIND_STRUCTURES, {
 				filter: structure => {
-					return structure.structureType == STRUCTURE_LINK && 
+					return structure.structureType == STRUCTURE_LINK &&
 						downlinks.indexOf(structure.id) >= 0 &&
-						// calcDist(structure.pos, creep.pos) < 10 && 
+						// calcDist(structure.pos, creep.pos) < 10 &&
 						structure.energy != structure.energyCapacity;
 				}
 			});
@@ -195,7 +195,7 @@ const TASKS = {
 			if(node){
 				switch(creep.harvest(node)){
 					case ERR_NOT_IN_RANGE:
-						if(creep.moveTo(node) == ERR_NO_PATH){
+						if(creep.moveTo(node) == ERR_NO_PATH && node.length > 1){
 							creep.memory.blocked = node.id;
 						}
 					case OK:
@@ -225,7 +225,7 @@ const TASKS = {
 		// const targets = creep.room.find(FIND_STRUCTURES, {
 		const transferTarget = creep.pos.findClosestByRange(FIND_STRUCTURES, {
 			filter: structure => {
-				return whiteList.indexOf(structure.structureType) >= 0 && 
+				return whiteList.indexOf(structure.structureType) >= 0 &&
 					structure.energy < structure.energyCapacity;
 			}
 		});
@@ -272,7 +272,7 @@ const TASKS = {
 		}else{
 			creep.memory.busy = ACTIONS.BUILD;
 		}
-		
+
 		const nextUp = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES);
 
 		if(nextUp){
@@ -401,12 +401,12 @@ const TASKS = {
 		return;
 		creep.memory.busy = ACTIONS.EXPLORE;
 		const homeRoom = getHomeBase(creep).room.name;
-		
+
 		if(!creep.memory.destination){
 			const exits = Game.map.describeExits( creep.room.name );
 			let foundNewRoom;
 			for(var room in exits){
-				if(Memory.roomsToExplore.indexOf(exits[room]) < 0 && 
+				if(Memory.roomsToExplore.indexOf(exits[room]) < 0 &&
 					Memory.exploredRooms.indexOf(exits[room]) < 0){
 
 					Memory.roomsToExplore.push( exits[room] );
@@ -610,131 +610,55 @@ const TASKS = {
 			}
 		}
 	},
-	[ACTIONS.FIND_MINING_SITE]: (creep, props) => {
-		const { x, y } = creep.pos;
+	[ACTIONS.FIND_MINING_SITE]: creep => {
+		const {
+			memory: { busy, destination },
+			pos: { x, y }
+		} = creep;
+		const carry = _.sum(creep.carry);
 
-		if(creep.room.name != creep.memory.quarry && _.sum(creep.carry) == 0){
+		if(creep.room.name != destination && carry == 0){
 			creep.memory.busy = ACTIONS.FIND_MINING_SITE;
-			const path = Game.map.findRoute(creep.room, creep.memory.quarry);
+			const path = Game.map.findRoute(creep.room, destination);
 			const exit = creep.pos.findClosestByRange( path[0].exit );
 			creep.moveTo(exit);
 			return true;
-		}else if(creep.room.name == creep.memory.quarry && _.sum(creep.carry) == 0 && creep.memory.busy == ACTIONS.FIND_MINING_SITE){
+		}else if(creep.room.name == destination && busy == ACTIONS.FIND_MINING_SITE){
 			if(x == 0 || y == 0 || x == 49 || y == 49){
-				// console.log("Dont block the exit");
 				creep.moveTo(25, 25);
 				return true;
 			}else{
-				const nodes = creep.room.find(FIND_SOURCES);
-				if(nodes.length == 0){
-					// console.log("This room has no nodes");
-					const roomIndex = Memory.quarry[ creep.memory.home ].indexOf( creep.room.name );
-					if(roomIndex >= 0){
-						Memory.quarry[ creep.memory.home ].splice(roomIndex,1);
-					}
-					creep.memory.quarry = null;
-					return true;
-				}else{
-					//Know when to expand further
-					// console.log("Can we expand further?");
-				}
-
 				creep.memory.busy = false;
 				creep.cancelOrder('moveTo');
 			}
 		}
-		// const numQuarries = Memory.quarry.length;
-		// if(numQuarries > 0 && !creep.memory.destination){
-		// 	creep.memory.destination = Memory.quarry[ (props.minerIndex - 1) % numQuarries ];
-		// 	// creep.memory.destination = Memory.quarry[ Math.floor(Math.random() * numQuarries) ];
-		// 	// creep.memory.destination = Memory.quarry[ 0 ];
-		// 	return true;
-		// }else if(creep.room.name != creep.memory.destination && creep.carry.energy == 0){
-		// 	const path = Game.map.findRoute(creep.room, creep.memory.destination);
-		// 	const exit = creep.pos.findClosestByRange( path[0].exit );
-		// 	creep.moveTo(exit);
-		// 	return true;
-		// }else if(creep.room.name == creep.memory.destination)`{
-		// 	const { x, y } = creep.pos;
-		// 	if(x == 0 || y == 0 || x == 49 || y == 49){
-		// 		creep.moveTo(25, 25);
-		// 		return true;
-		// 	}else{
-		// 		creep.cancelOrder('moveTo');
-		// 	}
-		// }
 	},
 	[ACTIONS.GOTO_WORKSITE]: creep => {
-		const { x, y } = creep.pos;
+		const {
+			memory: { busy, destination },
+			pos: { x, y }
+		} = creep;
+		const carry = _.sum(creep.carry);
 
-		creep.memory.destination = "W3N6";
-		if(creep.room.name != creep.memory.destination && _.sum(creep.carry) > 0){
+		if(creep.room.name != destination && carry > 0){
 			creep.memory.busy = ACTIONS.GOTO_WORKSITE;
-			const path = Game.map.findRoute(creep.room, creep.memory.destination);
+			const path = Game.map.findRoute(creep.room, destination);
 			const exit = creep.pos.findClosestByRange( path[0].exit );
 			creep.moveTo(exit);
 			return true;
-		}else if(creep.room.name == creep.memory.destination && _.sum(creep.carry) == 0 && creep.memory.busy == ACTIONS.GOTO_WORKSITE){
+		}else if(creep.room.name == destination && busy == ACTIONS.GOTO_WORKSITE){
+				// console.log(creep.name,"go to",destination,"from",creep.room.name);
 			if(x == 0 || y == 0 || x == 49 || y == 49){
-				// console.log("Dont block the exit");
+				// if(creep.name == "Kylie"){
+				// 	console.log("Dont block the exits");
+				// }
 				creep.moveTo(25, 25);
 				return true;
 			}else{
-				// const nodes = creep.room.find(FIND_SOURCES);
-				// if(nodes.length == 0){
-				// 	// console.log("This room has no nodes");
-				// 	const roomIndex = Memory.quarry[ creep.memory.home ].indexOf( creep.room.name );
-				// 	if(roomIndex >= 0){
-				// 		Memory.quarry[ creep.memory.home ].splice(roomIndex,1);
-				// 	}
-				// 	creep.memory.quarry = null;
-				// 	return true;
-				// }else{
-				// 	//Know when to expand further
-				// 	// console.log("Can we expand further?");
-				// }
-
 				creep.memory.busy = false;
 				creep.cancelOrder('moveTo');
 			}
 		}
-		return;
-		// creep.memory.busy = ACTIONS.GOTO_WORKSITE;
-		// const homeRoom = getHomeBase(creep).room.name;
-		// const numWorksites = Memory.worksites.length;
-		// let destination;
-
-
-		// creep.memory.destination = "W1N3";//Memory.worksites[ 0 ];
-		// if(creep.carry.energy == 0){
-		// 	creep.memory.destination = homeRoom;
-		// 	creep.memory.busy = false;
-		// }else if(creep.memory.destination == homeRoom){
-		// 	// creep.memory.destination = null;
-		// }
-
-		// if(!creep.memory.destination){
-		// 	creep.memory.destination = Memory.worksites[ 0 ];
-		// 	return true;
-		// }else if(creep.memory.destination && creep.room.name != creep.memory.destination){
-		// 	const path = Game.map.findRoute(creep.room, creep.memory.destination);
-		// 	const exit = creep.pos.findClosestByRange( path[0].exit );
-		// 	creep.moveTo(exit);
-		// 	return true;
-		// }else if(creep.room.name == creep.memory.destination){
-		// 	const { x, y } = creep.pos;
-		// 	if(x == 0 || y == 0 || x == 49 || y == 49){
-		// 		creep.moveTo(25, 25);
-		// 		return true;
-		// 	}else{
-		// 		creep.cancelOrder('moveTo');
-		// 	}
-
-		// 	if(creep.carry.energy == 0){
-		// 		creep.memory.destination = null;
-		// 		return;
-		// 	}
-		// }
 	},
 	[ACTIONS.HEALING]: creep => {
 		const injured = creep.room.find(FIND_MY_CREEPS, {
@@ -843,7 +767,7 @@ const TASKS = {
 				return structure.structureType == STRUCTURE_TERMINAL;
 			}
 		})[0];
-		if(terminal && 
+		if(terminal &&
 			terminal.store[RESOURCE_ENERGY] > 0 &&
 			Memory.terminals[ creep.room.name ] &&
 			!Memory.terminals[ creep.room.name ].offer &&

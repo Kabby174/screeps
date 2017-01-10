@@ -27,6 +27,8 @@ const ROOM_LISTS = {
 	STRUCTURES: "STRUCTURES",
 	SOURCES: "SOURCES",
 	EXITS: "EXITS",
+	CONSTRUCTION_SITE: "CONSTRUCTION_SITE",
+	NAME: "NAME",
 };
 
 const trade = () => {
@@ -147,6 +149,10 @@ const roomStatus = () => {
 			continue;
 		}
 
+		if(!roomMemory.NAME){
+			setRoom(roomName, ROOM_LISTS.NAME, { name: roomName });
+		}
+
 		//Take inventory of all my structures
 		builtStructures = room.find(FIND_STRUCTURES, { filter: isBuiltStructure });
 		if(!roomMemory.STRUCTURES ||
@@ -193,6 +199,12 @@ const roomStatus = () => {
 		if(roomMemory.MODE == ROOM_TYPE.OUTPOST){
 			if(Memory.worksites.indexOf(roomName) < 0){
 				Memory.worksites.push( roomName );
+			}
+
+			if(!roomMemory.CONSTRUCTION_SITE){
+				setRoom(roomName, ROOM_LISTS.CONSTRUCTION_SITE, {
+					sites: room.find(FIND_CONSTRUCTION_SITES).length
+				})
 			}
 		}
 	}
@@ -248,6 +260,12 @@ const setRoom = (roomName, list, props) => {
 		case ROOM_LISTS.EXITS:
 			updateList = props.exits;
 			break;
+		case ROOM_LISTS.CONSTRUCTION_SITE:
+			updateList = props.sites;
+			break;
+		case ROOM_LISTS.NAME:
+			updateList = props.name;
+			break;
 		default:
 			return;
 	}
@@ -272,6 +290,14 @@ const exploreRooms = () => {
 
 	}
 }
+const getActiveWorksites = room => {
+	return room.MODE == ROOM_TYPE.OUTPOST &&
+		room.CONSTRUCTION_SITE > 0;
+}
+const getQuarryInfo = room => {
+	return room.MODE == ROOM_TYPE.OUTPOST &&
+		room.SOURCES > 0;
+}
 const assignWorkers = () => {
 	//REMOTE_BUILDER
 	const workers = [
@@ -286,7 +312,8 @@ const assignWorkers = () => {
 	let props;
 	let minUnits;
 	let role;
-	// console.log("Worksites", Memory.worksites);
+	const worksites = _.filter(Memory.rooms, getActiveWorksites);
+	const quarries = _.filter(Memory.rooms, getQuarryInfo);
 	for(const index in workers){
 		unitCount[ workers[index] ] = 0;
 	}
@@ -302,22 +329,15 @@ const assignWorkers = () => {
 
 		actions = UnitManager.UNIT_TYPES[ role || UNITS.DEFAULT ].actions;
 		props = {};
+
 		switch(role){
 			case UNITS.REMOTE_BUILDER:
-				let newDestination = destination ||
-					Memory.worksites.length > 0 ?
-					Memory.worksites[ unitCount[role] % Memory.worksites.length ] :
-					home;
-				// console.log("Go to ", newDestination, unitCount[role] % Memory.worksites.length);
-				// creep.memory.destination = destination -|| Memory.
+				// console.log("Builder", unitCount[role], worksites.length, unitCount[role] % worksites.length);
+				// console.log( worksites[ unitCount[role] % worksites.length ].NAME );
+				creep.memory.destination = worksites[ unitCount[role] % worksites.length ].NAME;
 				break;
 			case UNITS.REMOTE_MINER:
-				// props = {
-				// 	minerIndex: unitCount[role]
-				// }
-				if(!creep.memory.quarry || Memory.quarry["W2N5"].indexOf(creep.memory.quarry) < 0){
-					creep.memory.quarry = Memory.quarry["W2N5"][ (unitCount[role] - 1) % Memory.quarry["W2N5"].length ] ;
-				}
+				creep.memory.destination = quarries[ unitCount[role] % quarries.length ].NAME;
 				break;
 		}
 
@@ -331,8 +351,8 @@ const assignWorkers = () => {
 		role = workers[index];
 		switch(role){
 			case UNITS.REMOTE_BUILDER:
-				minUnits = Memory.worksites.length * 4;
-				if(Memory.worksites.length > 0 &&
+				minUnits = worksites.length * 4;
+				if(minUnits > 0 &&
 					unitCount[ role ] < minUnits){
 					workOrders.push({
 						role,
@@ -342,8 +362,8 @@ const assignWorkers = () => {
 				}
 				break;
 			case UNITS.REMOTE_MINER:
-				minUnits = Memory.quarry["W2N5"].length;
-				if(unitCount[role] < minUnits){
+				minUnits = quarries.length;
+				if(minUnits.length > 0 && unitCount[role] < minUnits){
 					workOrders.push({
 						role,
 						unitCount: unitCount[ role ],
