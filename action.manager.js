@@ -123,14 +123,29 @@ const TASKS = {
 	[ACTIONS.SCAVENGE]: creep => {
 		//Pickup resources on the ground
 		if(!creep.memory.busy && _.sum(creep.carry) < (creep.carryCapacity * .75)){
-			const dropped = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES);
+			let dropped;
+			if(creep.memory.role == UNITS.RUNNER && creep.memory.dropped){//Continue to target
+				dropped = creep.room.find(FIND_DROPPED_RESOURCES,{
+					filter: source => {
+						return creep.memory.dropped == source.id;
+					}
+				})[0];
+			}
+			//Find new target
+			if(!dropped){
+				dropped = creep.pos.findClosestByRange(FIND_DROPPED_RESOURCES);
+			}
+			//Pick it up
 			if(dropped){
+				creep.memory.dropped = dropped.id;
 				switch(creep.pickup(dropped)){
 					case ERR_NOT_IN_RANGE:
 						creep.moveTo(dropped);
 					case OK:
 						return true;
 				}
+			}else{
+				creep.memory.dropped = false;
 			}
 		}
 	},
