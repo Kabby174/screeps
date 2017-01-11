@@ -55,7 +55,7 @@ const UNIT_TYPES = {
 	[HARVESTER]: {
 		minUnits: 12,
 		minParts: 3,
-		parts: [WORK, CARRY, MOVE, WORK, CARRY, MOVE, WORK, WORK, WORK, WORK],
+		parts: [WORK, CARRY, MOVE, WORK, CARRY, MOVE, WORK, CARRY, WORK, CARRY],
 		actions: [WITHDRAW, SCAVENGE, UPGRADE],
 	},
 	[ORE_HARVESTER]: {
