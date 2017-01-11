@@ -339,7 +339,7 @@ const manageTowers = spawn => {
 			}
 
 			if(target){
-				myTower.attack(target);	
+				myTower.attack(target);
 			}else if(friendly){
 				myTower.heal(friendly);
 			}else if(damagedStructure){

@@ -25,8 +25,8 @@ const isEnemy = structure => {
 
 const minStructureHealth = 10000;
 const creepDamagedStructureWhitelist = [
-	STRUCTURE_CONTAINER, STRUCTURE_ROAD, STRUCTURE_STORAGE, STRUCTURE_TOWER, 
-	STRUCTURE_LINK, STRUCTURE_EXTRACTOR, STRUCTURE_TERMINAL, 
+	STRUCTURE_CONTAINER, STRUCTURE_ROAD, STRUCTURE_STORAGE, STRUCTURE_TOWER,
+	STRUCTURE_LINK, STRUCTURE_EXTRACTOR, STRUCTURE_TERMINAL,
 	STRUCTURE_WALL, STRUCTURE_RAMPART
 ];
 const isCreepDamagedStructure = structure => {
@@ -63,6 +63,7 @@ const UTILS = {
 	isStorage,
 	isEnemy,
 	isTowerDamagedStructure,
+	isCreepDamagedStructure,
 }
 
 module.exports = UTILS;

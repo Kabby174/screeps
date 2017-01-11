@@ -198,7 +198,7 @@ const TASKS = {
 			}else{
 				node = creep.room.find(FIND_SOURCES)[0];
 			}
-			
+
 			if(node){
 				switch(creep.harvest(node)){
 					case ERR_NOT_IN_RANGE:
