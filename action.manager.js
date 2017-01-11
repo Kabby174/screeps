@@ -373,23 +373,26 @@ const TASKS = {
 		}
 	},
 	[ACTIONS.SETTLE]: creep => {
-		const battlezone = "W3N6";
-		if(creep.room.name != battlezone){
-			const path = Game.map.findRoute(creep.room, battlezone);
+		const { room, memory: { destination, busy }} = creep;
+
+		if(room.name != destination){
+			creep.memory.busy = ACTIONS.SETTLE;
+			const path = Game.map.findRoute(room, destination);
 			const exit = creep.pos.findClosestByRange( path[0].exit );
 			creep.moveTo(exit);
 			return true;
-		}else if(creep.room.name == battlezone){
+		}else if(room.name == destination && busy == ACTIONS.SETTLE){
 			const { x, y } = creep.pos;
 			if(x == 0 || y == 0 || x == 49 || y == 49){
 				creep.moveTo(25, 25);
 				return true;
 			}else{
+				creep.memory.busy = false;
 				creep.cancelOrder('moveTo');
 			}
 		}else{
-			creep.say("Claim");
-		    const controller = creep.room.controller;
+			creep.say("Mine");
+		    const controller = room.controller;
 			switch(creep.claimController(controller)){
 				case ERR_NOT_IN_RANGE:
 					creep.moveTo(controller);

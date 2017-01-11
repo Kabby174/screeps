@@ -54,6 +54,17 @@ const isTowerDamagedStructure = structure => {
 		}
 	}
 }
+const countUnitsByType = role => {
+	return _.filter(Game.creeps, creep => {
+		return creep.memory.role == role;
+	}).length;
+}
+const getUnitsWithDestination = (dest, role) => {
+	return _.filter(Game.creeps, creep => {
+		return creep.memory.role == role && 
+			creep.memory.destination == dest;
+	}).length;
+}
 
 const UTILS = {
 	isBuiltStructure,
@@ -64,6 +75,8 @@ const UTILS = {
 	isEnemy,
 	isTowerDamagedStructure,
 	isCreepDamagedStructure,
+	countUnitsByType,
+	getUnitsWithDestination
 }
 
 module.exports = UTILS;

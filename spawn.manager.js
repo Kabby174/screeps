@@ -49,7 +49,7 @@ const spawnUnits = spawn => {
 		UNITS.RUNNER,
 		UNITS.REPAIRMAN,
 		UNITS.RAIDER,
-		UNITS.SETTLER,
+		// UNITS.SETTLER,
 		// UNITS.REMOTE_MINER,
 		UNITS.EXPLORER,
 		// UNITS.REMOTE_BUILDER,
@@ -208,7 +208,6 @@ const spawnUnits = spawn => {
 
 			//Someone already completed the work order
 			if(order.unitCount >= order.minUnits){
-				console.log("Work order["+order.role+"] already completed");
 				continue;
 			}
 
@@ -217,9 +216,30 @@ const spawnUnits = spawn => {
 				role: order.role,
 				home: roomName,
 				unitCount: order.unitCount,
-				minUnits: order.minUnits
+				minUnits: order.minUnits,
+				destination: order.destination
 			})){
 				Memory.workOrders[index].unitCount++;
+				return;
+			}
+		}
+		//Settle down
+		for(let index in Memory.settlers){
+			order = Memory.settlers[index];
+			//Someone already completed the work order
+			if(order.unitCount >= order.minUnits){
+				continue;
+			}
+
+			//Fill the workorder
+			if(UnitManager.buildUnit({
+				role: order.role,
+				home: roomName,
+				unitCount: order.unitCount,
+				minUnits: order.minUnits,
+				destination: order.destination
+			})){
+				Memory.settlers[index].unitCount++;
 				return;
 			}
 		}
@@ -357,7 +377,7 @@ const markQuarries = spawn => {
 
 		const exits = Game.map.describeExits( roomName );
 
-		console.log();
+		// console.log();
 		let exitName;
 		for(let direction in exits){
 			exitName = exits[direction];

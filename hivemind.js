@@ -5,6 +5,8 @@ const {
 	isContainer,
 	isStorage,
 	isEnemy,
+	countUnitsByType,
+	getUnitsWithDestination,
 } = require("utils");
 const { UNITS } = require('constants');
 const ActionManager = require('action.manager');
@@ -142,7 +144,7 @@ const roomStatus = () => {
 	let exits;
 	let exitArray;
 	let constructionSite;
-  let enemyStructures;
+  	let enemyStructures;
 
 	for(let roomName in Game.rooms){
 		room = Game.rooms[roomName];
@@ -217,7 +219,6 @@ const roomStatus = () => {
 	}
 }
 const assignRemoteMiners = () => {
-	return;
 	let creep;
 	let roomMemory;
 	let minerCount = {};
@@ -280,7 +281,6 @@ const setRoom = (roomName, list, props) => {
 	Memory.rooms[ roomName ][ list ] = updateList;
 }
 const exploreRooms = () => {
-	return;
 	Memory[ ROOM_LISTS.UNEXPLORED ] = Memory[ ROOM_LISTS.UNEXPLORED ] || [];
 	let unexplored = Memory[ ROOM_LISTS.UNEXPLORED ] || [];
 	let roomMemory;
@@ -297,6 +297,38 @@ const exploreRooms = () => {
 
 	}
 }
+const settle = () => {
+	let flag;
+	let settleLoc = [];
+	let playerStructures;
+	let roomName;
+	let room;
+
+	for(const name in Game.flags){
+		flag = Game.flags[name];
+		roomName = flag.pos.roomName;
+		if(!Game.rooms[ roomName ] && flag.color == COLOR_BLUE){
+			// console.log(getUnitsWithDestination( roomName, UNITS.SETTLER ),"units going to",roomName);
+			settleLoc.push({
+				role: UNITS.SETTLER,
+				unitCount: getUnitsWithDestination( roomName, UNITS.SETTLER ),
+				minUnits: 1,
+				destination: roomName,
+			});
+		}else{
+			room = Game.rooms[ roomName ];
+			if(room.controller.my){
+				// console.log(flag.pos.x, flag.pos.y, flag.name);
+				switch(room.createConstructionSite(flag.pos.x, flag.pos.y, STRUCTURE_SPAWN)){
+					case OK:
+						flag.remove();
+						return;
+				}
+			}
+		}
+	}
+	Memory.settlers = settleLoc;
+}
 const getActiveWorksites = room => {
 	return room.MODE == ROOM_TYPE.OUTPOST &&
 		room.CONSTRUCTION_SITE > 0;
@@ -310,6 +342,7 @@ const assignWorkers = () => {
 	const workers = [
 		UNITS.REMOTE_BUILDER,
 		UNITS.REMOTE_MINER,
+		UNITS.SETTLER,
 	];
 
 	let workOrders;
@@ -350,6 +383,11 @@ const assignWorkers = () => {
 					creep.memory.destination = quarries[ unitCount[role] % quarries.length ].NAME;
 				}else{
 					creep.memory.destination = creep.memory.home;
+				}
+				break;
+			case UNITS.SETTLER:
+				if(!creep.memory.destination){
+					creep.memory.destination = Memory.settlers[0] || creep.memory.home;
 				}
 				break;
 		}
@@ -401,7 +439,8 @@ const HiveMind = {
 		trade();
 		assignWorkers();
 		// assignRemoteMiners();
-		exploreRooms();
+		// exploreRooms();
+		settle();
 	},
 }
 

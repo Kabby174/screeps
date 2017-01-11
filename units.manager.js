@@ -147,6 +147,7 @@ const UnitManager = {
 			unitCount, minUnits } = Object.assign({},
 				UNIT_TYPES[unit.role],
 				unit);
+
 		const homeBase = Game.spawns[ Object.keys(Game.spawns).find(obj => {
 			return Game.spawns[obj].room.name == home;
 		}) ];
