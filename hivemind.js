@@ -218,30 +218,6 @@ const roomStatus = () => {
 		}
 	}
 }
-const assignRemoteMiners = () => {
-	let creep;
-	let roomMemory;
-	let minerCount = {};
-	// console.log();
-	for(let name in Game.creeps){
-		creep = Game.creeps[ name ];
-		const { role, quarry } = creep.memory;
-
-		if(role != UNITS.REMOTE_MINER){
-			continue;
-		}
-
-		minerCount[quarry] = minerCount[quarry] + 1 || 0;
-	}
-
-	for(let roomName in minerCount){
-		roomMemory = getRoom( roomName );
-		if(roomMemory[ ROOM_LISTS.MODE ] != ROOM_TYPE.OUTPOST){
-			continue;
-		}
-		// console.log(minerCount[roomName],"of",roomMemory.SOURCES);
-	}
-}
 
 const initRoom = roomName => {
 	// Memory.rooms = {};
@@ -331,11 +307,26 @@ const settle = () => {
 }
 const getActiveWorksites = room => {
 	return room.MODE == ROOM_TYPE.OUTPOST &&
-		room.CONSTRUCTION_SITE > 0;
+		room.CONSTRUCTION_SITE > 0 &&
+		room.NAME &&
+		Memory.hostileRooms.indexOf(room.name) < 0;
 }
 const getQuarryInfo = room => {
 	return room.MODE == ROOM_TYPE.OUTPOST &&
-		room.SOURCES > 0;
+		room.SOURCES > 0 &&
+		room.NAME &&
+		Memory.hostileRooms.indexOf(room.name) < 0;
+}
+const getHostileRooms = rooms => {
+	let hostileRooms = [];
+	let room;
+	for(const name in rooms){
+		room = rooms[name];
+		if(room.MODE == ROOM_TYPE.HOSTILE && room.NAME){
+			hostileRooms.push(room.NAME);
+		}
+	}
+	return hostileRooms;
 }
 const assignWorkers = () => {
 	//REMOTE_BUILDER
@@ -346,14 +337,16 @@ const assignWorkers = () => {
 	];
 
 	let workOrders;
-	let unitCount = {};;
+	let unitCount = {};
 	let creep;
 	let actions;
 	let props;
 	let minUnits;
 	let role;
+	Memory.hostileRooms = getHostileRooms(Memory.rooms);
 	const worksites = _.filter(Memory.rooms, getActiveWorksites);
 	const quarries = _.filter(Memory.rooms, getQuarryInfo);
+	
 	for(const index in workers){
 		unitCount[ workers[index] ] = 0;
 	}
@@ -414,7 +407,7 @@ const assignWorkers = () => {
 				break;
 			case UNITS.REMOTE_MINER:
 				minUnits = quarries.length;
-				if(minUnits.length > 0 && unitCount[role] < minUnits){
+				if(minUnits > 0 && unitCount[role] < minUnits){
 					workOrders.push({
 						role,
 						unitCount: unitCount[ role ],
@@ -438,7 +431,6 @@ const HiveMind = {
 		roomStatus();
 		trade();
 		assignWorkers();
-		// assignRemoteMiners();
 		// exploreRooms();
 		settle();
 	},
