@@ -49,7 +49,7 @@ const UNIT_TYPES = {
 	[MINER]: {
 		minUnits: 5,
 		minParts: 3,
-		parts: [WORK, MOVE, CARRY, WORK, WORK, MOVE, WORK, WORK, WORK, WORK, WORK],
+		parts: [WORK, MOVE, CARRY, WORK, WORK, MOVE, WORK, WORK, MOVE, WORK, WORK, MOVE],
 		actions: [MINING, DROP],
 	},
 	[HARVESTER]: {

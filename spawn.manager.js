@@ -158,7 +158,7 @@ const spawnUnits = spawn => {
 				case UNITS.HARVESTER:
 					minUnits = unitCount[ UNITS.BUILDER ] < unitCount[ role ] / 2 ?
 						unitCount[ UNITS.BUILDER ] :
-						Math.max(Math.ceil(spawn.room.controller.level * 2.5), 2);
+						Math.max(Math.ceil(spawn.room.controller.level * 2.75), 2);
 					break;
 				case UNITS.BUILDER:
 					minUnits = calcUnits({
