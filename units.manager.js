@@ -118,8 +118,8 @@ const UNIT_TYPES = {
 	},
 	[EXPLORER]: {
 		minUnits: 0,
-		minParts: 6,
-		parts: [MOVE, MOVE, MOVE, MOVE, MOVE, MOVE],
+		minParts: 3,
+		parts: [MOVE, MOVE, MOVE],
 		actions: [EXPLORE]
 	},
 	[SETTLER]: {

@@ -185,15 +185,6 @@ const roomStatus = () => {
 
 		enemyStructures = room.find(FIND_HOSTILE_STRUCTURES, isEnemy);
 
-		//Assign the task for each room
-    if(enemyStructures.length > 0){
-      setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HOSTILE });
-    }else if(roomMemory.STRUCTURES && roomMemory.STRUCTURES[STRUCTURE_SPAWN] > 0){
-			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HATCHERY });
-		}else if(roomMemory.SOURCES > 0){
-			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.OUTPOST });
-		}
-
 		//Find the exits
 		if(!roomMemory.EXITS &&
 			roomMemory.MODE == ROOM_TYPE.HATCHERY){
@@ -203,6 +194,15 @@ const roomStatus = () => {
 				exits.push( exitArray[ direction ]);
 			}
 			setRoom(roomName, ROOM_LISTS.EXITS, { exits });
+		}
+
+	//Assign the task for each room
+    if(enemyStructures.length > 0){
+      setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HOSTILE });
+    }else if(roomMemory.STRUCTURES && roomMemory.STRUCTURES[STRUCTURE_SPAWN] > 0){
+			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HATCHERY });
+		}else if(roomMemory.SOURCES > 0){
+			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.OUTPOST });
 		}
 
 		if(roomMemory.MODE == ROOM_TYPE.OUTPOST){
@@ -328,6 +328,33 @@ const getHostileRooms = rooms => {
 	}
 	return hostileRooms;
 }
+const isRoomExplored = room => {
+	return room[ ROOM_LISTS.MODE ] && room[ ROOM_LISTS.NAME ] && room[ ROOM_LISTS.MODE ] != ROOM_TYPE.HOSTILE;
+}
+const findUnexploredRooms = () => {
+	const knownRooms = _.filter(Memory.rooms, isRoomExplored);
+	const knownRoomNames = [];
+	const exits = [];
+	let currentRoom;
+
+	console.log();
+	for(const name in knownRooms){
+		knownRoomNames.push(knownRooms[name].NAME);
+	}
+	for(const index in knownRoomNames){
+		currentRoom = Memory.rooms[knownRoomNames[index]][ ROOM_LISTS.EXITS ];
+		// console.log( Object.keys( Memory.rooms[name] ));
+		for(const exitIndex in currentRoom){
+			if(knownRoomNames.indexOf( currentRoom[exitIndex] ) < 0){
+				exits.push(currentRoom[exitIndex]);
+			}
+			// console.log(currentRoom[exitIndex]);
+		}
+		// if(knownRoomNames.indexOf())
+	}
+	console.log("Known Rooms", knownRoomNames);
+	console.log("Unexplored Rooms", exits);
+}
 const assignWorkers = () => {
 	//REMOTE_BUILDER
 	const workers = [
@@ -343,10 +370,12 @@ const assignWorkers = () => {
 	let props;
 	let minUnits;
 	let role;
+
 	Memory.hostileRooms = getHostileRooms(Memory.rooms);
 	const worksites = _.filter(Memory.rooms, getActiveWorksites);
 	const quarries = _.filter(Memory.rooms, getQuarryInfo);
-	
+	const exploreSites = findUnexploredRooms();
+
 	for(const index in workers){
 		unitCount[ workers[index] ] = 0;
 	}
@@ -431,7 +460,6 @@ const HiveMind = {
 		roomStatus();
 		trade();
 		assignWorkers();
-		// exploreRooms();
 		settle();
 	},
 }
