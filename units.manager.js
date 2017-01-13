@@ -5,12 +5,15 @@ const {
 		ORE_HARVESTER,
 		MINER, REMOTE_MINER,
 		BUILDER, REMOTE_BUILDER,
-		BOWMAN, RAIDER,
 		EXPLORER, SETTLER,
 		MEDIC,
 		MERCHANT,
 		SCIENTIST,
-		REPAIRMAN
+		REPAIRMAN,
+
+		PALADIN,
+		FOOTMAN,
+		RIFLEMAN,
 	},
 	ACTIONS: {
 		MINING, TRANSFER, UPGRADE, BUILD, STORE, SCAVENGE, DROP, REPAIR, WITHDRAW,
@@ -68,7 +71,7 @@ const UNIT_TYPES = {
 		minUnits: 4, //MEMORY.worksites.length > 0 ? 6 : 0,
 		minParts: 3,
 		parts: [WORK, CARRY, MOVE, WORK, CARRY, MOVE, WORK, CARRY, MOVE],
-		actions: [WITHDRAW, SCAVENGE, BUILD, TRANSFER, REPAIR, UPGRADE],
+		actions: [GO_HOME, WITHDRAW, SCAVENGE, BUILD, TRANSFER, REPAIR, UPGRADE],
 	},
 	[REPAIRMAN]: {
 		minUnits: 2, //MEMORY.worksites.length > 0 ? 6 : 0,
@@ -81,7 +84,7 @@ const UNIT_TYPES = {
 		minUnits: 0, //MEMORY.worksites.length > 0 ? 6 : 0,
 		minParts: 9,
 		parts: [WORK, WORK, CARRY, CARRY, MOVE, MOVE, CARRY, CARRY, MOVE, MOVE, CARRY, MOVE, CARRY, MOVE],
-		actions: [MINING, WITHDRAW, SCAVENGE, GOTO_WORKSITE, REPAIR, BUILD],
+		actions: [MINING, WITHDRAW, SCAVENGE, GOTO_WORKSITE, BUILD, REPAIR],
 		// actions: [WITHDRAW, SCAVENGE, REPAIR, BUILD, TRANSFER, UPGRADE],
 		// actions: [ WITHDRAW, SCAVENGE, BUILD, STORE ]
 	},
@@ -96,23 +99,11 @@ const UNIT_TYPES = {
 			],
 		actions: [GET_TERMINAL, SCAVENGE, SEND_LINK, TRANSFER, STORE, PASS],
 	},
-	[BOWMAN]: {
-		minUnits: 0,
-		minParts: 9,
-		parts: [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE],
-		actions: [HUNT],
-	},
-	[RAIDER]: {
-		minUnits: (Memory.battlFields || []).length > 0 ? 8 : 2,//Memory.playerRooms.length > 0 ? 4 : 2,
-		minParts: 4,
-		parts: [TOUGH, TOUGH, ATTACK, MOVE, TOUGH, TOUGH, ATTACK, MOVE, MOVE, MOVE, ATTACK, ATTACK, MOVE],
-		actions: [CALL_HELP, HUNT],
-	},
 	[REMOTE_MINER]: {
 		minUnits: 2,
 		minParts: 3,
 		parts: [WORK, CARRY, MOVE, WORK, MOVE, CARRY, WORK, WORK, MOVE, MOVE, CARRY, CARRY, MOVE, MOVE],
-		actions: [CALL_HELP, CALL_WORKER, FIND_MINING_SITE, SCAVENGE, MINING, GO_HOME, SEND_LINK, STORE, TRANSFER, BUILD],
+		actions: [CALL_HELP, CALL_WORKER, FIND_MINING_SITE, SCAVENGE, MINING, BUILD, GO_HOME, SEND_LINK, STORE, TRANSFER, BUILD],
 		// actions: [CALL_HELP, CALL_WORKER, FIND_MINING_SITE, SCAVENGE, MINING, GO_HOME, STORE, BUILD, TRANSFER],
 		// actions: [CALL_WORKER, FIND_MINING_SITE, MINING, GO_HOME, STORE],
 	},
@@ -133,7 +124,37 @@ const UNIT_TYPES = {
 		minParts: 6,
 		parts: [MOVE, MOVE, CARRY, CARRY, CARRY, MOVE],
 		actions: [TRADE_TERMINAL],
-	}
+	},
+		//move 50,
+		//work 100,
+		//carry 50,
+		//attack 80,
+		//ranged_attack 150,
+		//heal 250,
+		//claim 600,
+		//tough 10
+		//500, 160, 
+	[PALADIN]: {
+		minUnits: 0,
+		minParts: 15,
+		parts: [TOUGH, TOUGH, TOUGH, TOUGH, ATTACK, MOVE, ATTACK, MOVE, MOVE, ATTACK, ATTACK, MOVE, HEAL, HEAL, MOVE],
+		actions: [],
+	},
+	[FOOTMAN]: {
+		minUnits: 0,
+		minParts: 15,
+		parts: [TOUGH, TOUGH, CARRY, CARRY, CARRY, ATTACK, MOVE, ATTACK, MOVE, MOVE, ATTACK, ATTACK, MOVE, ATTACK, MOVE],
+		actions: [],
+	},
+	[RIFLEMAN]: {
+		minUnits: 0,
+		minParts: 8,
+		parts: [TOUGH, TOUGH, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE],
+		actions: [],
+	},
+		// PALADIN,
+		// FOOTMAN,
+		// RIFLEMAN,
 }
 const UnitManager = {
 	UNIT_TYPES,

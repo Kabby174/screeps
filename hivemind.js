@@ -7,10 +7,12 @@ const {
 	isEnemy,
 	countUnitsByType,
 	getUnitsWithDestination,
+	isCreepDamagedStructure,
 } = require("utils");
 const { UNITS } = require('constants');
 const ActionManager = require('action.manager');
 const UnitManager = require('units.manager');
+const Warpath = require('warpath.manager');
 
 const ROOM_TYPE = {
 	HATCHERY: "HATCHERY",
@@ -145,6 +147,8 @@ const roomStatus = () => {
 	let exitArray;
 	let constructionSite;
   	let enemyStructures;
+  	let sites;
+  	let siteIndex;
 
 	for(let roomName in Game.rooms){
 		room = Game.rooms[roomName];
@@ -196,25 +200,34 @@ const roomStatus = () => {
 			setRoom(roomName, ROOM_LISTS.EXITS, { exits });
 		}
 
-	//Assign the task for each room
-    if(enemyStructures.length > 0){
-      setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HOSTILE });
-    }else if(roomMemory.STRUCTURES && roomMemory.STRUCTURES[STRUCTURE_SPAWN] > 0){
+		//Assign the task for each room
+		if(enemyStructures.length > 0){
+			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HOSTILE });
+		}else if(roomMemory.STRUCTURES && roomMemory.STRUCTURES[STRUCTURE_SPAWN] > 0){
 			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HATCHERY });
 		}else if(roomMemory.SOURCES > 0){
 			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.OUTPOST });
 		}
 
-		if(roomMemory.MODE == ROOM_TYPE.OUTPOST){
-			if(Memory.worksites.indexOf(roomName) < 0){
-				Memory.worksites.push( roomName );
-			}
-
-			if(!roomMemory.CONSTRUCTION_SITE){
-				setRoom(roomName, ROOM_LISTS.CONSTRUCTION_SITE, {
-					sites: room.find(FIND_CONSTRUCTION_SITES).length
-				})
-			}
+		siteIndex = Memory.worksites.indexOf(roomName);
+		switch(roomMemory.MODE){
+			case ROOM_TYPE.OUTPOST:
+				sites = room.find(FIND_CONSTRUCTION_SITES).length +
+					room.find(FIND_STRUCTURES, {
+						filter: isCreepDamagedStructure
+					}).length;
+				if(sites > 0){
+					if(siteIndex < 0){
+						Memory.worksites.push( roomName );
+					}
+				}else if(siteIndex >= 0){
+					Memory.worksites.splice(siteIndex,1);
+				}
+				break;
+			case ROOM_TYPE.HATCHERY:
+			case ROOM_TYPE.HOSTILE:
+				Memory.worksites.splice(siteIndex,1);
+				break;
 		}
 	}
 }
@@ -273,7 +286,7 @@ const exploreRooms = () => {
 
 	}
 }
-const settle = () => {
+const readTheFlags = () => {
 	let flag;
 	let settleLoc = [];
 	let playerStructures;
@@ -283,33 +296,40 @@ const settle = () => {
 	for(const name in Game.flags){
 		flag = Game.flags[name];
 		roomName = flag.pos.roomName;
-		if(!Game.rooms[ roomName ] && flag.color == COLOR_BLUE){
-			// console.log(getUnitsWithDestination( roomName, UNITS.SETTLER ),"units going to",roomName);
-			settleLoc.push({
-				role: UNITS.SETTLER,
-				unitCount: getUnitsWithDestination( roomName, UNITS.SETTLER ),
-				minUnits: 1,
-				destination: roomName,
-			});
-		}else{
-			room = Game.rooms[ roomName ];
-			if(room.controller.my){
-				// console.log(flag.pos.x, flag.pos.y, flag.name);
-				switch(room.createConstructionSite(flag.pos.x, flag.pos.y, STRUCTURE_SPAWN)){
-					case OK:
-						flag.remove();
-						return;
+		switch(flag.color){
+			case COLOR_BLUE:
+				console.log("New expansion");
+				if(!Game.rooms[ roomName ]){
+					// console.log(getUnitsWithDestination( roomName, UNITS.SETTLER ),"units going to",roomName);
+					settleLoc.push({
+						role: UNITS.SETTLER,
+						unitCount: getUnitsWithDestination( roomName, UNITS.SETTLER ),
+						minUnits: 1,
+						destination: roomName,
+					});
+				}else{
+					room = Game.rooms[ roomName ];
+					if(room.controller.my){
+						// console.log(flag.pos.x, flag.pos.y, flag.name);
+						switch(room.createConstructionSite(flag.pos.x, flag.pos.y, STRUCTURE_SPAWN)){
+							case OK:
+								flag.remove();
+								return;
+						}
+					}
 				}
-			}
+				break;
+			case COLOR_ORANGE:
+				// console.log("Rally Point");
+				if(Warpath.ready()){
+					Warpath.assault();
+				}else{
+					Warpath.rally(flag);
+				}
+				break;
 		}
 	}
 	Memory.settlers = settleLoc;
-}
-const getActiveWorksites = room => {
-	return room.MODE == ROOM_TYPE.OUTPOST &&
-		room.CONSTRUCTION_SITE > 0 &&
-		room.NAME &&
-		Memory.hostileRooms.indexOf(room.name) < 0;
 }
 const getQuarryInfo = room => {
 	return room.MODE == ROOM_TYPE.OUTPOST &&
@@ -337,23 +357,20 @@ const findUnexploredRooms = () => {
 	const exits = [];
 	let currentRoom;
 
-	console.log();
+	// console.log();
 	for(const name in knownRooms){
 		knownRoomNames.push(knownRooms[name].NAME);
 	}
 	for(const index in knownRoomNames){
 		currentRoom = Memory.rooms[knownRoomNames[index]][ ROOM_LISTS.EXITS ];
-		// console.log( Object.keys( Memory.rooms[name] ));
 		for(const exitIndex in currentRoom){
 			if(knownRoomNames.indexOf( currentRoom[exitIndex] ) < 0){
 				exits.push(currentRoom[exitIndex]);
 			}
-			// console.log(currentRoom[exitIndex]);
 		}
-		// if(knownRoomNames.indexOf())
 	}
-	console.log("Known Rooms", knownRoomNames);
-	console.log("Unexplored Rooms", exits);
+	// console.log("Known Rooms", knownRoomNames);
+	// console.log("Unexplored Rooms", exits);
 }
 const assignWorkers = () => {
 	//REMOTE_BUILDER
@@ -372,7 +389,7 @@ const assignWorkers = () => {
 	let role;
 
 	Memory.hostileRooms = getHostileRooms(Memory.rooms);
-	const worksites = _.filter(Memory.rooms, getActiveWorksites);
+	const worksites = Memory.worksites;
 	const quarries = _.filter(Memory.rooms, getQuarryInfo);
 	const exploreSites = findUnexploredRooms();
 
@@ -395,17 +412,18 @@ const assignWorkers = () => {
 		switch(role){
 			case UNITS.REMOTE_BUILDER:
 				if(worksites.length){
-					creep.memory.destination = worksites[ unitCount[role] % worksites.length ].NAME;
+					creep.memory.destination = worksites[ unitCount[role] % worksites.length ];
 				}else{
 					creep.memory.destination = creep.memory.home;
 				}
 				break;
 			case UNITS.REMOTE_MINER:
-				if(quarries.length){
-					creep.memory.destination = quarries[ unitCount[role] % quarries.length ].NAME;
-				}else{
-					creep.memory.destination = creep.memory.home;
-				}
+				// if(quarries.length){
+				// 	creep.memory.destination = quarries[ unitCount[role] % quarries.length ].NAME;
+				// }else{
+				// 	creep.memory.destination = creep.memory.home;
+				// }
+				creep.memory.destination = unitCount[role] % 2 ? "W6N3" : "W8N3";
 				break;
 			case UNITS.SETTLER:
 				if(!creep.memory.destination){
@@ -447,7 +465,6 @@ const assignWorkers = () => {
 		}
 	}
 	Memory.workOrders = workOrders;
-	// console.log("Work orders", workOrders.length, workOrders[0] && workOrders[0].role );
 }
 
 const HiveMind = {
@@ -460,7 +477,7 @@ const HiveMind = {
 		roomStatus();
 		trade();
 		assignWorkers();
-		settle();
+		readTheFlags();
 	},
 }
 

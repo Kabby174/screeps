@@ -48,7 +48,6 @@ const spawnUnits = spawn => {
 		UNITS.BUILDER,
 		UNITS.RUNNER,
 		UNITS.REPAIRMAN,
-		UNITS.RAIDER,
 		// UNITS.SETTLER,
 		// UNITS.REMOTE_MINER,
 		UNITS.EXPLORER,
@@ -170,9 +169,6 @@ const spawnUnits = spawn => {
 				case UNITS.ORE_HARVESTER:
 					minUnits = harvesters ? UnitManager.UNIT_TYPES[ role ].minUnits : 0;
 					break;
-				case UNITS.RAIDER:
-					minUnits = 0;//totalCreeps > 20 ? UnitManager.UNIT_TYPES[ role ].minUnits : 0;
-					break;
 				case UNITS.MINER:
 					minUnits = Memory.spawns[ spawn.name ].miners;
 					break;
@@ -202,47 +198,35 @@ const spawnUnits = spawn => {
 				};
 			}
 		}
-		// console.log("Available to fill work orders");
-		let order;
-		for(let index in Memory.workOrders){
-			order = Memory.workOrders[index];
 
-			//Someone already completed the work order
-			if(order.unitCount >= order.minUnits){
-				continue;
-			}
-
-			//Fill the workorder
-			if(UnitManager.buildUnit({
-				role: order.role,
-				home: roomName,
-				unitCount: order.unitCount,
-				minUnits: order.minUnits,
-				destination: order.destination
-			})){
-				Memory.workOrders[index].unitCount++;
-				return;
-			}
+		if(spawnFromList(spawn, Memory.workOrders)){
+		}else if(spawnFromList(spawn, Memory.military)){
+		}else if(spawnFromList(spawn, Memory.settlers)){
 		}
-		//Settle down
-		for(let index in Memory.settlers){
-			order = Memory.settlers[index];
-			//Someone already completed the work order
-			if(order.unitCount >= order.minUnits){
-				continue;
-			}
+	}
+}
+const spawnFromList = (spawn, list) => {
+	let order;
+	for(let index in list){
+		order = list[index];
 
-			//Fill the workorder
-			if(UnitManager.buildUnit({
-				role: order.role,
-				home: roomName,
-				unitCount: order.unitCount,
-				minUnits: order.minUnits,
-				destination: order.destination
-			})){
-				Memory.settlers[index].unitCount++;
-				return;
-			}
+		//Someone already completed the work order
+		if(order.unitCount >= order.minUnits){
+			console.log("Already completed ",order.role);
+			continue;
+		}
+
+		//Fill the workorder
+		if(UnitManager.buildUnit({
+			role: order.role,
+			home: order.home || spawn.room.name,
+			unitCount: order.unitCount,
+			minUnits: order.minUnits,
+			destination: order.destination
+		})){
+			console.log("Spawning unit, ",order.role);
+			list[index].unitCount++;
+			return true;
 		}
 	}
 }

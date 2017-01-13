@@ -361,13 +361,13 @@ const TASKS = {
 		}
 	},
 	[ACTIONS.GO_HOME]: creep => {
-		const homeRoom = getHomeBase(creep).room.name;
-		if(creep.carry.energy == creep.carryCapacity && creep.room.name != homeRoom){//Go Home
-			const path = Game.map.findRoute(creep.room, homeRoom);
+		const { memory: { home } } = creep;
+		if(creep.carry.energy == creep.carryCapacity && creep.room.name != home){//Go Home
+			const path = Game.map.findRoute(creep.room, home);
 			const exit = creep.pos.findClosestByRange( path[0].exit );
 			creep.moveTo(exit);
 			return true;
-		}else if(creep.room.name == homeRoom){
+		}else if(creep.room.name == home){
 			const { x, y } = creep.pos;
 			if(x == 0 || y == 0 || x == 49 || y == 49){
 				creep.moveTo(25, 25);
