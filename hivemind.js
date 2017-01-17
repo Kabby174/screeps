@@ -212,6 +212,8 @@ const roomStatus = () => {
 		siteIndex = Memory.worksites.indexOf(roomName);
 		switch(roomMemory.MODE){
 			case ROOM_TYPE.OUTPOST:
+				// console.log("Add worksite", roomName)
+				addWorksite(roomName);
 				sites = room.find(FIND_CONSTRUCTION_SITES).length +
 					room.find(FIND_STRUCTURES, {
 						filter: isCreepDamagedStructure
@@ -231,7 +233,11 @@ const roomStatus = () => {
 		}
 	}
 }
-
+const addWorksite = name => {
+	if(Memory.worksites.indexOf(name) < 0){
+		Memory.worksites.push(name);
+	}
+}
 const initRoom = roomName => {
 	// Memory.rooms = {};
 	Memory.rooms = Memory.rooms || {};
@@ -273,6 +279,7 @@ const exploreRooms = () => {
 	Memory[ ROOM_LISTS.UNEXPLORED ] = Memory[ ROOM_LISTS.UNEXPLORED ] || [];
 	let unexplored = Memory[ ROOM_LISTS.UNEXPLORED ] || [];
 	let roomMemory;
+	console.log();
 	for(let roomName in Memory.rooms){
 		roomMemory = getRoom(roomName);
 
@@ -283,7 +290,6 @@ const exploreRooms = () => {
 		if(unexplored.indexOf(roomName) < 0){
 			console.log("Explore room", roomName);
 		}
-
 	}
 }
 const readTheFlags = () => {
@@ -336,6 +342,19 @@ const getQuarryInfo = room => {
 		room.SOURCES > 0 &&
 		room.NAME &&
 		Memory.hostileRooms.indexOf(room.name) < 0;
+}
+const getQuarryArray = () => {
+	const quarries = _.filter(Memory.rooms, getQuarryInfo);
+	const sourceList = [];
+	let room;
+	for(const name in quarries){
+		room = quarries[name];
+		for(let ii = 0; ii < room[ROOM_LISTS.SOURCES]; ++ii){
+			sourceList.push(room[ROOM_LISTS.NAME]);
+		}
+	}
+
+	return sourceList;
 }
 const getHostileRooms = rooms => {
 	let hostileRooms = [];
@@ -390,7 +409,10 @@ const assignWorkers = () => {
 
 	Memory.hostileRooms = getHostileRooms(Memory.rooms);
 	const worksites = Memory.worksites;
-	const quarries = _.filter(Memory.rooms, getQuarryInfo);
+	// console.log("Worksites", Memory.worksites,'|', worksites, worksites.length);
+	const quarries = getQuarryArray();
+	// const = _.filter(Memory.rooms, getQuarryInfo);
+	// const quarryKeys = Object.keys(quarries);
 	const exploreSites = findUnexploredRooms();
 
 	for(const index in workers){
@@ -418,12 +440,11 @@ const assignWorkers = () => {
 				}
 				break;
 			case UNITS.REMOTE_MINER:
-				// if(quarries.length){
-				// 	creep.memory.destination = quarries[ unitCount[role] % quarries.length ].NAME;
-				// }else{
-				// 	creep.memory.destination = creep.memory.home;
-				// }
-				creep.memory.destination = unitCount[role] % 2 ? "W6N3" : "W8N3";
+				if(quarries.length){
+					creep.memory.destination = quarries[ unitCount[role] % quarries.length ];
+				}else{
+					creep.memory.destination = creep.memory.home;
+				}
 				break;
 			case UNITS.SETTLER:
 				if(!creep.memory.destination){
@@ -453,7 +474,7 @@ const assignWorkers = () => {
 				}
 				break;
 			case UNITS.REMOTE_MINER:
-				minUnits = quarries.length;
+				minUnits = quarries.length * 2;
 				if(minUnits > 0 && unitCount[role] < minUnits){
 					workOrders.push({
 						role,
@@ -475,6 +496,7 @@ const HiveMind = {
 	handleTasks: () => {
 		Memory.workOrders = Memory.workOrders || [];
 		roomStatus();
+		exploreRooms();
 		trade();
 		assignWorkers();
 		readTheFlags();
