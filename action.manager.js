@@ -291,20 +291,31 @@ const TASKS = {
 		if(creep.carry.energy == 0){
 			creep.memory.busy = false;
 			return;
-		}else{
-			creep.memory.busy = ACTIONS.BUILD;
 		}
 
-		const nextUp = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES);
-
-		if(nextUp){
-			switch(creep.build(nextUp)){
+		creep.memory.busy = ACTIONS.BUILD;
+		const controller = creep.room.controller;
+		if(controller && controller.my && controller.level < 2){
+			console.log("Controller", controller, controller.level);
+			switch(creep.upgradeController(controller)){
 				case ERR_NOT_IN_RANGE:
-					creep.moveTo(nextUp);
+					creep.moveTo(controller);
 				case OK:
 					return true;
 			}
+		}else{
+			const nextUp = creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES);
+
+			if(nextUp){
+				switch(creep.build(nextUp)){
+					case ERR_NOT_IN_RANGE:
+						creep.moveTo(nextUp);
+					case OK:
+						return true;
+				}
+			}
 		}
+
 	},
 	[ACTIONS.STORE]: creep => {
 		creep.memory.busy = ACTIONS.STORE;
@@ -344,13 +355,16 @@ const TASKS = {
 		}
 	},
 	[ACTIONS.REPAIR]: creep => {
-		creep.memory.busy = ACTIONS.REPAIR;
 		if(creep.carry.energy == 0){
+			creep.memory.busy = false;
 			return;
 		}
+		creep.memory.busy = ACTIONS.REPAIR;
+
 		const target = creep.room.find(FIND_STRUCTURES, {
 			filter: isCreepDamagedStructure
 		})[0];
+
 		if(target){
 			switch(creep.repair(target)){
 				case ERR_NOT_IN_RANGE:
@@ -763,7 +777,6 @@ const TASKS = {
 					return true;
 				}
 			}else if(offer){
-				// console.log();
 				if(creep.carry[RESOURCE_ENERGY] == 0){
 					// console.log("Go get the resources");
 					TASKS[ ACTIONS.WITHDRAW ](creep);
@@ -806,7 +819,6 @@ const ActionManager = {
 	doTasks: (creep, actionList, props = {}) => {
 		const actions = actionList.slice();
 		if(creep.memory.role == UNITS.REMOTE_BUILDER){
-			// console.log();
 		}
 		while(actions.length){
 			task = actions.shift();

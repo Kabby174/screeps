@@ -24,7 +24,6 @@ const calcDist = (posA, posB) => {
 	return Math.sqrt(Math.pow(posA.x - posB.x, 2) + Math.pow(posA.y - posB.y, 2));
 }
 const calcUnits = ({ role, unitCount, spawn}) => {
-	// console.log();
 	let count;
 	switch(role){
 		case UNITS.BUILDER:
@@ -130,8 +129,6 @@ const spawnUnits = spawn => {
 	}else{
 		const checkMiner = UNITS.MINER;
 		let minUnits = Math.max(1, Math.floor(UnitManager.UNIT_TYPES[ checkMiner ].minUnits / 2));
-		// console.log();
-		// console.log(spawn.name);
 		if(unitCount[ checkMiner ] < minUnits){
 			UnitManager.buildUnit({
 				role: checkMiner,
@@ -149,7 +146,6 @@ const spawnUnits = spawn => {
 		})[0];
 
 		let role;
-		// console.log();
 		// console.log("---",spawn.name+"["+spawn.room.name+"]","---");
 		for(const index in buildOrder){
 			role = buildOrder[index];
@@ -212,7 +208,7 @@ const spawnFromList = (spawn, list) => {
 
 		//Someone already completed the work order
 		if(order.unitCount >= order.minUnits){
-			console.log("Already completed ",order.role);
+			// console.log("Already completed ",order.role);
 			continue;
 		}
 
@@ -224,7 +220,7 @@ const spawnFromList = (spawn, list) => {
 			minUnits: order.minUnits,
 			destination: order.destination
 		})){
-			console.log("Spawning unit, ",order.role);
+			// console.log("Spawning unit, ",order.role, order.unitCount+"/"+order.minUnits);
 			list[index].unitCount++;
 			return true;
 		}
@@ -281,7 +277,6 @@ const addExtensions = spawn => {
 
 	// console.log([extensionCount],"of",extensionMax);
 	// const colors = [COLOR_RED, COLOR_GREEN, COLOR_BLUE, COLOR_YELLOW, COLOR_PURPLE];
-	// console.log();
 	const area = spawn.room.lookAtArea(y - maxDist, x - maxDist, y + maxDist, x + maxDist, true);
 	let xDist;
 	let yDist;
@@ -362,7 +357,6 @@ const markQuarries = spawn => {
 
 		const exits = Game.map.describeExits( roomName );
 
-		// console.log();
 		let exitName;
 		for(let direction in exits){
 			exitName = exits[direction];
@@ -397,8 +391,6 @@ const findLinks = spawn => {
 	if(unsorted.length == 0){
 		return;
 	}
-
-	// console.log();
 
 	let closestLink; //Memory.downlinks[ roomName ][0];
 	let link;

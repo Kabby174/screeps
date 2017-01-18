@@ -49,7 +49,6 @@ const trade = () => {
 	let request;
 	let terminalName;
 	const storageWhitelist = [STRUCTURE_CONTAINER, STRUCTURE_STORAGE];
-	// console.log();
 
 	for(let roomName in Game.rooms){
 		room = Game.rooms[roomName];
@@ -279,7 +278,6 @@ const exploreRooms = () => {
 	Memory[ ROOM_LISTS.UNEXPLORED ] = Memory[ ROOM_LISTS.UNEXPLORED ] || [];
 	let unexplored = Memory[ ROOM_LISTS.UNEXPLORED ] || [];
 	let roomMemory;
-	console.log();
 	for(let roomName in Memory.rooms){
 		roomMemory = getRoom(roomName);
 
@@ -288,7 +286,7 @@ const exploreRooms = () => {
 		}
 
 		if(unexplored.indexOf(roomName) < 0){
-			console.log("Explore room", roomName);
+			// console.log("Explore room", roomName);
 		}
 	}
 }
@@ -376,7 +374,6 @@ const findUnexploredRooms = () => {
 	const exits = [];
 	let currentRoom;
 
-	// console.log();
 	for(const name in knownRooms){
 		knownRoomNames.push(knownRooms[name].NAME);
 	}
@@ -474,7 +471,8 @@ const assignWorkers = () => {
 				}
 				break;
 			case UNITS.REMOTE_MINER:
-				minUnits = quarries.length * 2;
+				// minUnits = quarries.length * 2;
+				minUnits = 8;
 				if(minUnits > 0 && unitCount[role] < minUnits){
 					workOrders.push({
 						role,
@@ -496,7 +494,7 @@ const HiveMind = {
 	handleTasks: () => {
 		Memory.workOrders = Memory.workOrders || [];
 		roomStatus();
-		exploreRooms();
+		// exploreRooms();
 		trade();
 		assignWorkers();
 		readTheFlags();

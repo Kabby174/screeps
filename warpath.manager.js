@@ -57,7 +57,6 @@ const countEnlisted = list => {
 };
 const WarPath = {
 	rally: flag => {
-		console.log();
 		Memory.squads = Memory.squads || [];
 		Memory.military = Memory.military || [];
 		let needMore = {};

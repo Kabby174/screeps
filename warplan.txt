@@ -1,0 +1,26 @@
+For my empire
+Determine what the empire needs
+
+For each room
+	See if they can serve the empire
+	Assign new tasks
+ 	Determine what the room needs
+		Units
+			Are my units the biggest I can build?
+				If no, do I have the resources to build a bigger unit?
+					If Yes, absorb the cripple unit and make a new unit
+		Structures
+			Are there any structures that needs to be repaired right now?
+			Are there and structures that are being build
+			Is there any upkeep I need to do on buildings?
+				Transfer energy
+				Transfer resources
+				Alchemy
+				Repair
+
+For each unit
+	Do I have a task?
+		If yes, what's the next action I can take to complete my task
+	Do I have a target?
+		If yes, handle the target
+		If no, create a target for other creeps in the unit
