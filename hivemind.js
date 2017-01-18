@@ -304,24 +304,24 @@ const readTheFlags = () => {
 		roomName = flag.pos.roomName;
 		switch(flag.color){
 			case COLOR_BLUE:
-				console.log("New expansion");
-				if(!Game.rooms[ roomName ]){
+				// console.log("New expansion");
+				room = Game.rooms[ roomName ];
+				if(!room || !room.controller.my){
 					// console.log(getUnitsWithDestination( roomName, UNITS.SETTLER ),"units going to",roomName);
+					// console.log("Build a settler");
 					settleLoc.push({
 						role: UNITS.SETTLER,
 						unitCount: getUnitsWithDestination( roomName, UNITS.SETTLER ),
 						minUnits: 1,
 						destination: roomName,
 					});
-				}else{
-					room = Game.rooms[ roomName ];
-					if(room.controller.my){
-						// console.log(flag.pos.x, flag.pos.y, flag.name);
-						switch(room.createConstructionSite(flag.pos.x, flag.pos.y, STRUCTURE_SPAWN)){
-							case OK:
-								flag.remove();
-								return;
-						}
+				}else if(room.controller.my){
+					// console.log(flag.pos.x, flag.pos.y, flag.name);
+					// console.log("Build a spawn");
+					switch(room.createConstructionSite(flag.pos.x, flag.pos.y, STRUCTURE_SPAWN)){
+						case OK:
+							flag.remove();
+							return;
 					}
 				}
 				break;
