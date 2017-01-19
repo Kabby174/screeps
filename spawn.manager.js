@@ -328,6 +328,7 @@ const manageTowers = spawn => {
 			filter: isTowerDamagedStructure
 		})[0];
 
+		// console.log("New Target", target);
 		if(!target && !friendly && !damagedStructure){
 			return;
 		}

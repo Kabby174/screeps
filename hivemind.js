@@ -13,6 +13,8 @@ const { UNITS } = require('constants');
 const ActionManager = require('action.manager');
 const UnitManager = require('units.manager');
 const Warpath = require('warpath.manager');
+const Squad = require('squad');
+const MemoryLists = require('memory.lists');
 
 const ROOM_TYPE = {
 	HATCHERY: "HATCHERY",
@@ -135,7 +137,7 @@ const terminalSend = terminal => {
 	}
 }
 
-const roomStatus = () => {
+const sortRooms = () => {
 	let room;
 	let sources;
 	let roomMemory;
@@ -145,9 +147,9 @@ const roomStatus = () => {
 	let exits;
 	let exitArray;
 	let constructionSite;
-  	let enemyStructures;
-  	let sites;
-  	let siteIndex;
+	let enemyStructures;
+	let sites;
+	let siteIndex;
 
 	for(let roomName in Game.rooms){
 		room = Game.rooms[roomName];
@@ -203,6 +205,13 @@ const roomStatus = () => {
 		if(enemyStructures.length > 0){
 			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HOSTILE });
 		}else if(roomMemory.STRUCTURES && roomMemory.STRUCTURES[STRUCTURE_SPAWN] > 0){
+			// console.log("Hatchery", roomName, roomMemory.NAME);
+			if(roomName == "W4N3"){
+				console.log("Setup Work Party", Memory.parties);
+				MemoryLists.add(MemoryLists.PARTY, {
+					[MemoryLists.PARTY]: Squad.createParty(Squad.TYPES.WORKERS)
+				});
+			}
 			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HATCHERY });
 		}else if(roomMemory.SOURCES > 0){
 			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.OUTPOST });
@@ -472,7 +481,7 @@ const assignWorkers = () => {
 				break;
 			case UNITS.REMOTE_MINER:
 				// minUnits = quarries.length * 2;
-				minUnits = 8;
+				minUnits = 0;
 				if(minUnits > 0 && unitCount[role] < minUnits){
 					workOrders.push({
 						role,
@@ -491,13 +500,15 @@ const HiveMind = {
 	ROOM_TYPE,
 	getRoom,
 	setRoom,
+	sortRooms,
+	assignWorkers,
 	handleTasks: () => {
-		Memory.workOrders = Memory.workOrders || [];
-		roomStatus();
+		// Memory.workOrders = Memory.workOrders || [];
+		// sortRooms();
 		// exploreRooms();
-		trade();
+		// trade();
 		assignWorkers();
-		readTheFlags();
+		// readTheFlags();
 	},
 }
 

@@ -82,11 +82,11 @@ const TASKS = {
 			const whiteList = [STRUCTURE_CONTAINER, STRUCTURE_STORAGE, STRUCTURE_LINK, STRUCTURE_TERMINAL];
 			const targets = creep.room.find(FIND_STRUCTURES, {
 				filter: structure => {
-					if(structure.structureType == STRUCTURE_LINK){
-						return Memory.downlinks[ creep.room.name ].indexOf(structure.id) >= 0;
-					}else if(structure.structureType == STRUCTURE_TERMINAL){
-						return Memory.terminals[ creep.room.name ].request;
-					}
+					// if(structure.structureType == STRUCTURE_LINK){
+					// 	return Memory.downlinks[ creep.room.name ].indexOf(structure.id) >= 0;
+					// }else if(structure.structureType == STRUCTURE_TERMINAL){
+					// 	return Memory.terminals[ creep.room.name ].request;
+					// }
 					return whiteList.indexOf(structure.structureType) >= 0;
 				}
 			});
