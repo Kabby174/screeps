@@ -1,6 +1,7 @@
 const {
 	UNITS: {
 		DEFAULT,
+		WORKER,
 		HARVESTER, RUNNER,
 		ORE_HARVESTER,
 		MINER, REMOTE_MINER,
@@ -37,11 +38,24 @@ const {
 	},
 } = require('constants');
 
+/** Unit Costs
+tough: 10,
+move: 50,
+carry: 50,
+attack: 80,
+work: 100,
+ranged_attack: 150,
+heal: 250,
+claim: 600,
+**/
 const UNIT_TYPES = {
 	[DEFAULT]: {
 		minUnits: 4,
 		parts: [WORK, CARRY, MOVE],
 		actions: [MINING, SCAVENGE, WITHDRAW, TRANSFER, UPGRADE]
+	},
+	[WORKER]:{
+		parts: [WORK, CARRY, MOVE, WORK, CARRY, MOVE, WORK, WORK, MOVE, WORK, MOVE],
 	},
 	[MEDIC]: {
 		minUnits: 0,
@@ -125,15 +139,6 @@ const UNIT_TYPES = {
 		parts: [MOVE, MOVE, CARRY, CARRY, CARRY, MOVE],
 		actions: [TRADE_TERMINAL],
 	},
-		//move 50,
-		//work 100,
-		//carry 50,
-		//attack 80,
-		//ranged_attack 150,
-		//heal 250,
-		//claim 600,
-		//tough 10
-		//500, 160, 
 	[PALADIN]: {
 		minUnits: 0,
 		minParts: 15,
