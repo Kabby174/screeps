@@ -816,7 +816,7 @@ const TASKS = {
 	}
 };
 const ActionManager = {
-	doTasks: (creep, actionList, props = {}) => {
+	doTasks: (creep, actionList = [], props = {}) => {
 		const actions = actionList.slice();
 		if(creep.memory.role == UNITS.REMOTE_BUILDER){
 		}

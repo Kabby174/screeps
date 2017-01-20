@@ -150,6 +150,8 @@ const sortRooms = () => {
 	let enemyStructures;
 	let sites;
 	let siteIndex;
+	let squad;
+	let roomKey;
 
 	for(let roomName in Game.rooms){
 		room = Game.rooms[roomName];
@@ -206,11 +208,23 @@ const sortRooms = () => {
 			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HOSTILE });
 		}else if(roomMemory.STRUCTURES && roomMemory.STRUCTURES[STRUCTURE_SPAWN] > 0){
 			// console.log("Hatchery", roomName, roomMemory.NAME);
-			if(roomName == "W4N3"){
-				console.log("Setup Work Party", Memory.parties);
-				MemoryLists.add(MemoryLists.PARTY, {
-					[MemoryLists.PARTY]: Squad.createParty(Squad.TYPES.WORKERS)
-				});
+			roomKey = {
+				roomName,
+				level: MemoryLists.LEVEL.ROOM,
+				type: MemoryLists.TYPES.WORKFORCE,
+				groupName: roomName+"_1"
+			};
+
+			if(!MemoryLists.get(roomKey)){
+				spotCount = 0;
+				MemoryLists.add(Object.assign({}, roomKey, {
+					squad: Squad.createParty({
+						type: Squad.TYPES.WORKERS,
+						props: {
+							roomName
+						}
+					})
+				}));
 			}
 			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HATCHERY });
 		}else if(roomMemory.SOURCES > 0){

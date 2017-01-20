@@ -2,6 +2,7 @@ const SpawnManager = require('spawn.manager');
 const ActionManager = require('action.manager');
 const { UNIT_TYPES } = require('units.manager');
 const HiveMind = require('hivemind');
+const MemoryLists = require('memory.lists');
 const {
 	UNITS: {
 		DEFAULT,
@@ -45,7 +46,7 @@ module.exports.loop = () => {
 
 	let creep;
 	let actions;
-	for(let index in Memory.creeps) {
+	for(const index in Memory.creeps) {
 		creep = Game.creeps[index];
 
 		//Garbage collection
@@ -53,6 +54,9 @@ module.exports.loop = () => {
 			delete Memory.creeps[index];
 			continue;
 		}
+
+		actions = UNIT_TYPES[ creep.memory.role || DEFAULT ].actions;
+		ActionManager.doTasks(creep, [SCAVENGE, MINING, WITHDRAW, TRANSFER, UPGRADE]);
 	}
 
 	//Oversoul
@@ -60,7 +64,13 @@ module.exports.loop = () => {
 	HiveMind.handleTasks();
 
 	//Manage Spawns
-	for( let name in Game.spawns ){
+	for( const name in Game.spawns ){
 		SpawnManager.run( Game.spawns[name] );
+	}
+
+	//Manage Squads
+	const squads = MemoryLists.getSquads();
+	for(const index in squads){
+		squads[index].delegateTasks();
 	}
 }

@@ -38,16 +38,6 @@ const {
 	},
 } = require('constants');
 
-/** Unit Costs
-tough: 10,
-move: 50,
-carry: 50,
-attack: 80,
-work: 100,
-ranged_attack: 150,
-heal: 250,
-claim: 600,
-**/
 const UNIT_TYPES = {
 	[DEFAULT]: {
 		minUnits: 4,
@@ -55,7 +45,9 @@ const UNIT_TYPES = {
 		actions: [MINING, SCAVENGE, WITHDRAW, TRANSFER, UPGRADE]
 	},
 	[WORKER]:{
+		minParts: 3,
 		parts: [WORK, CARRY, MOVE, WORK, CARRY, MOVE, WORK, WORK, MOVE, WORK, MOVE],
+		// actions: [SCAVENGE, MINING, WITHDRAW, TRANSFER, UPGRADE]
 	},
 	[MEDIC]: {
 		minUnits: 0,
@@ -139,60 +131,81 @@ const UNIT_TYPES = {
 		parts: [MOVE, MOVE, CARRY, CARRY, CARRY, MOVE],
 		actions: [TRADE_TERMINAL],
 	},
+
 	[PALADIN]: {
-		minUnits: 0,
 		minParts: 15,
-		parts: [TOUGH, TOUGH, TOUGH, TOUGH, ATTACK, MOVE, ATTACK, MOVE, MOVE, ATTACK, ATTACK, MOVE, HEAL, HEAL, MOVE],
-		actions: [],
+		parts: [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, HEAL],
 	},
 	[FOOTMAN]: {
-		minUnits: 0,
 		minParts: 15,
 		parts: [TOUGH, TOUGH, CARRY, CARRY, CARRY, ATTACK, MOVE, ATTACK, MOVE, MOVE, ATTACK, ATTACK, MOVE, ATTACK, MOVE],
-		actions: [],
 	},
 	[RIFLEMAN]: {
-		minUnits: 0,
 		minParts: 8,
 		parts: [TOUGH, TOUGH, MOVE, MOVE, RANGED_ATTACK, RANGED_ATTACK, RANGED_ATTACK, MOVE],
-		actions: [],
 	},
 		// PALADIN,
 		// FOOTMAN,
 		// RIFLEMAN,
 }
+/** Unit Costs
+tough: 10,
+move: 50,
+carry: 50,
+attack: 80,
+work: 100,
+ranged_attack: 150,
+heal: 250,
+claim: 600,
+**/
 const UnitManager = {
 	UNIT_TYPES,
+	getUnit: unit => {
+		return UNIT_TYPES[unit];
+	},
+	getLargestUnit: ({ energyCap, parts }) => {
+		const largestUnit = [];
+		let cost = 0;
+		let partCost;
+		let part;
+		for(const index in parts){
+			part = parts[index];
+			partCost = BODYPART_COST[part];
+			if(cost + partCost > energyCap){
+				return {
+					largestUnit, cost
+				};
+			}
+			cost += partCost;
+			largestUnit.push(part);
+		}
+		return  { largestUnit, cost };
+	},
 	buildUnit: unit => {
 		if(!UNIT_TYPES[unit.role]){
 			console.log("UNKNOWN UNIT TYPE: ", unit.role);
 			return;
 		}
-		const { minParts, parts,
-			role, home, destination,
-			unitCount, minUnits } = Object.assign({},
+		const {
+				minParts, parts, role, home, destination
+			} = Object.assign({},
 				UNIT_TYPES[unit.role],
 				unit);
 
 		const homeBase = Game.spawns[ Object.keys(Game.spawns).find(obj => {
 			return Game.spawns[obj].room.name == home;
 		}) ];
-		let viable = parts.slice();
-
-		while(homeBase.canCreateCreep(viable) != OK && viable.length > Math.min(minParts, parts.length)){
-			viable = viable.slice(0, -1);
-		}
-
-		if(homeBase.canCreateCreep(viable) == OK){
-			const newName = homeBase.createCreep(viable, undefined, {
+		if(homeBase.canCreateCreep(parts) == OK){
+			const newName = homeBase.createCreep(parts, undefined, {
 				role,
 				home,
 				destination,
 			});
-			console.log(homeBase.name,"Spawning new "+role+": " + newName,
-				"["+Math.round(viable.length / parts.length * 1000) / 10 +"%]",
-				unitCount + 1,"/",minUnits);
-			return true;
+			console.log(homeBase.name,"Spawning new "+role+": " + newName);
+			// console.log(homeBase.name,"Spawning new "+role+": " + newName,
+			// 	"["+Math.round(viable.length / parts.length * 1000) / 10 +"%]",
+			// 	unitCount + 1,"/",minUnits);
+			return newName;
 		}
 	}
 }

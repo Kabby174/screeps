@@ -4,6 +4,8 @@ const ActionManager = require('action.manager');
 const {
 	isTowerDamagedStructure,
 } = require("utils");
+const Squad = require('squad');
+const MemoryLists = require('memory.lists');
 
 const calcMiners = spawn => {
 	const mines = spawn.room.find(FIND_SOURCES);
@@ -226,6 +228,52 @@ const spawnFromList = (spawn, list) => {
 		}
 	}
 }
+const fillSquad = ( spawn ) => {
+	const roomName = spawn.room.name;
+	const roomKey = {
+		roomName,
+		level: MemoryLists.LEVEL.ROOM,
+	};
+	const squads = MemoryLists.get(roomKey);
+
+	let squadList,
+		mySquad,
+		missingUnits,
+		unit,
+		largestUnit,
+		creepName,
+		role;
+
+	const energyCap = spawn.room.energyCapacityAvailable;
+	for(const key in squads){
+		squadList = squads[key];
+		for(const party in squadList){
+			mySquad = Squad.getParty(squadList[party]);
+			missingUnits = mySquad.getMissingUnits();
+			for(const index in missingUnits){
+				role = missingUnits[index];
+				unit = UnitManager.getUnit(role);
+				const { largestUnit, cost } = UnitManager.getLargestUnit({
+					energyCap,
+					parts: unit.parts,
+				});
+				if(cost <= spawn.room.energyAvailable){
+					creepName = UnitManager.buildUnit({
+						role,
+						home: roomName,
+						parts: largestUnit,
+					});
+					if(creepName){
+						mySquad.addCreep({
+							name: creepName,
+							role
+						});
+					}
+				}
+			}
+		}
+	}
+}
 
 const addStorage = spawn => {
 	const { x, y } = spawn.pos;
@@ -287,6 +335,10 @@ const addExtensions = spawn => {
 		area.forEach( object => {
 			xDist = Math.abs(object.x - x);
 			yDist = Math.abs(object.y - y);
+			if(xDist + yDist < 2){
+				return;
+			}
+
 			if(xDist + yDist == ii){
 				// console.log( ii, Math.pow(xDist, 2) + Math.pow(yDist, 2) );
 				// spawn.room.createFlag(object.x, object.y, object.x+","+object.y, colors[ii - 1]);
@@ -461,7 +513,9 @@ const SpawnManager = {
 			Memory.spawns[ spawn.name ] = {};
 		}
 
-		spawnUnits( spawn );
+		// spawnUnits( spawn );
+		fillSquad( spawn );
+
 		addExtensions( spawn );
 		addStorage( spawn );
 		manageTowers( spawn );
