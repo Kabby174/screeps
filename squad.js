@@ -51,9 +51,10 @@ class Party {
         this.partyList = list;
     }
     getMissingUnits(){
-        const needed = this.partyList.splice(0);
+        const needed = this.partyList.slice();
         let role,
             index;
+
         for(const name in this.squad){
             if(!Game.creeps[name]){
                 delete this.squad[name];
@@ -65,6 +66,12 @@ class Party {
                 needed.splice(index, 1);
             }
         }
+        // if(this.roomName == "W4N3"){
+        //     console.log();
+        //     console.log(this.roomName, Object.keys(this.squad));
+        //     console.log("Desired Party",this.partyList);
+        //     console.log("Needed",needed, this.sourcePositions);
+        // }
         return needed;
     }
     //Required props
@@ -87,9 +94,10 @@ class Workers extends Party {
 
         this.type = TYPES.WORKERS;
         this.roomName = props.roomName;
-        this.sourcePositions = props.sourcePositions || this.getSourcePositions();
+        this.sourcePositions = props.sourcePositions || this.getSourcePositions().length * 2;
         this.setParty([
-            { [UNITS.WORKER]: props.sources || 4 },
+            { [UNITS.WORKER]: this.sourcePositions || 4 },
+            // { [UNITS.WORKER]: this.getSourcePositions() },
         ]);
         // this.addCreep({
         //     name: "Johnny",
@@ -104,25 +112,30 @@ class Workers extends Party {
         // console.log("Missing Units", this.getMissingUnits());
     }
     getSourcePositions(){
-        // const room = Game.rooms[roomName];
-        // sources.forEach( mine => {
-        //     const {x,y} = mine.pos;
-        //     const spots = room.lookAtArea(y - 1, x - 1, y + 1, x + 1, true);
-        //
-        //     spots.forEach( object => {
-        //         if(object.type == "terrain" && (object.terrain == "plain" || object.terrain == "swamp")){
-        //             spotCount++;
-        //         }
-        //     });
-        // });
-        // console.log("Find source Positions");
+        const room = Game.rooms[ this.roomName ];
+    	const sources = room.find(FIND_SOURCES);
+        const miningSpots = [];
+        sources.forEach( mine => {
+            const {x,y} = mine.pos;
+            const spots = room.lookAtArea(y - 1, x - 1, y + 1, x + 1, true);
+
+            spots.forEach( object => {
+                if(object.type == "terrain" && (object.terrain == "plain" || object.terrain == "swamp")){
+                    miningSpots.push({
+                        x: object.x,
+                        y: object.y
+                    });
+                }
+            });
+        });
+        return miningSpots;
     }
     delegateTasks(){
         let creep;
         for(const name in this.squad){
             creep = Game.creeps[name];
             if(creep){
-                ActionManager.doTasks(creep, [SCAVENGE, MINING, WITHDRAW, TRANSFER, UPGRADE]);
+                ActionManager.doTasks(creep, [SCAVENGE, MINING, WITHDRAW, TRANSFER, REPAIR, BUILD, UPGRADE]);
             }
         }
     }

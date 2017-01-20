@@ -46,10 +46,10 @@ module.exports.loop = () => {
 
 	let creep;
 	let actions;
-	let unitFound = true;
+	let unitFound;
 	let mySquad;
 	const squads = MemoryLists.getSquads();
-	
+
 	for(const index in Memory.creeps) {
 		creep = Game.creeps[index];
 

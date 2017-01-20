@@ -257,6 +257,11 @@ const fillSquad = ( spawn ) => {
 					energyCap,
 					parts: unit.parts,
 				});
+				console.log("Parts", largestUnit.length, unit.minParts);
+				if(largestUnit.length < unit.minParts){
+					console.log("Not enough parts");
+					continue;
+				}
 				if(cost <= spawn.room.energyAvailable){
 					creepName = UnitManager.buildUnit({
 						role,
