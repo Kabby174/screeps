@@ -46,6 +46,10 @@ module.exports.loop = () => {
 
 	let creep;
 	let actions;
+	let unitFound = true;
+	let mySquad;
+	const squads = MemoryLists.getSquads();
+	
 	for(const index in Memory.creeps) {
 		creep = Game.creeps[index];
 
@@ -56,7 +60,18 @@ module.exports.loop = () => {
 		}
 
 		actions = UNIT_TYPES[ creep.memory.role || DEFAULT ].actions;
-		ActionManager.doTasks(creep, [SCAVENGE, MINING, WITHDRAW, TRANSFER, UPGRADE]);
+
+		unitFound = false;
+		for(const index in squads){
+			mySquad = Object.keys(squads[index].squad);
+			if(mySquad.indexOf(creep.name) >= 0){
+				unitFound = true;
+				break;
+			}
+		}
+		if(!unitFound){
+			ActionManager.doTasks(creep, [SCAVENGE, MINING, WITHDRAW, TRANSFER, UPGRADE]);
+		}
 	}
 
 	//Oversoul
@@ -69,7 +84,6 @@ module.exports.loop = () => {
 	}
 
 	//Manage Squads
-	const squads = MemoryLists.getSquads();
 	for(const index in squads){
 		squads[index].delegateTasks();
 	}
