@@ -1,6 +1,7 @@
 const Squad = require('squad');
 const TYPES = {
     WORKFORCE: "WORKFORCE",
+    WARBAND: "WARBAND",
 }
 const LEVEL = {
     ROOM: "ROOM",
@@ -33,7 +34,7 @@ module.exports = {
             return initList(obj);
         }
     },
-    add: (obj) => {
+    add: obj => {
         initList(obj)[ obj.type ][ obj.groupName ] = obj.squad;
     },
     getSquads: () => {

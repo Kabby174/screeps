@@ -254,10 +254,10 @@ const fillSquad = ( spawn ) => {
 				role = missingUnits[index];
 				unit = UnitManager.getUnit(role);
 				const { largestUnit, cost } = UnitManager.getLargestUnit({
-					energyCap,
+					energyCap: Object.keys(mySquad.squad).length < 2 ? 300 : energyCap,
 					parts: unit.parts,
 				});
-				console.log("Parts", largestUnit.length, unit.minParts);
+				// console.log("Parts", largestUnit.length, unit.minParts);
 				if(largestUnit.length < unit.minParts){
 					console.log("Not enough parts");
 					continue;
@@ -310,6 +310,7 @@ const addStorage = spawn => {
 	// });
 }
 const addExtensions = spawn => {
+	return;
 	const extensionCount = spawn.room.find(FIND_STRUCTURES, {
 		filter: structure => {
 			return structure.structureType == STRUCTURE_EXTENSION;

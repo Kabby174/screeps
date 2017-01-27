@@ -153,6 +153,23 @@ const sortRooms = () => {
 	let squad;
 	let roomKey;
 
+	//Empire's army
+	roomKey = {
+		level: MemoryLists.LEVEL.EMPIRE,
+		type: MemoryLists.TYPES.WARBAND,
+		groupName: "RAID_1"
+	};
+	if(!MemoryLists.get(roomKey)){
+		MemoryLists.add(Object.assign({}, roomKey, {
+			squad: Squad.createParty({
+				type: Squad.TYPES.WARRIORS,
+				props: {
+					groupName: roomKey.groupName,
+					groupType: roomKey.type,
+				}
+			})
+		}));
+	}
 	for(let roomName in Game.rooms){
 		room = Game.rooms[roomName];
 		roomMemory = getRoom(roomName);
@@ -216,16 +233,18 @@ const sortRooms = () => {
 			};
 
 			if(!MemoryLists.get(roomKey)){
-				spotCount = 0;
 				MemoryLists.add(Object.assign({}, roomKey, {
 					squad: Squad.createParty({
 						type: Squad.TYPES.WORKERS,
 						props: {
-							roomName
+							roomName,
+							groupName: roomKey.groupName,
+							groupType: roomKey.type,
 						}
 					})
 				}));
 			}
+
 			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.HATCHERY });
 		}else if(roomMemory.SOURCES > 0){
 			setRoom(roomName, ROOM_LISTS.MODE, { type: ROOM_TYPE.OUTPOST });

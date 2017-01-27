@@ -150,49 +150,30 @@ const TASKS = {
 		}
 	},
 	[ACTIONS.HARVEST]: creep => {
-		if(_.sum(creep.carry) < creep.carryCapacity){
+		if(!creep.memory.busy && _.sum(creep.carry) < creep.carryCapacity){
 			const node = creep.room.find(FIND_STRUCTURES,{
 				filter: structure => {
 					return structure.structureType == STRUCTURE_EXTRACTOR;
 				}
 			})[0];
 			if(node){
-				// const objects = creep.room.lookAt(node.pos);
-				// console.log("Harvests",objects);
-				// let mineral;
-				// objects.forEach( object => {
-				// 	console.log(object.type);
-				// 	if(object.type == LOOK_MINERALS){
-				// 		mineral = object;
-				// 	}
-				// })
-				const minerals = creep.room.find(FIND_MINERALS);
-				// const mineral = creep.room.find(creep.room.lookAt(node.pos),{
-				// 	filter: structure => {
-				// 		console.log("Check",Object.keys(structure));
-				// 		return false;
-				// 		// return structure.structureType == STRUCTURE_MINERAL;
-				// 	}
-				// });
-				let currentMineral;
-				for(let type in minerals){
-					currentMineral = minerals[ type ];
-					// console.log(creep.harvest(currentMineral), Object.keys(currentMineral));
-					// console.log("Harvest", _.sum(creep.carry)+"/"+creep.carryCapacity, creep.harvest(currentMineral));
-					switch(creep.harvest(currentMineral)){
+				const minerals = creep.room.find(FIND_MINERALS)[0];
+				if(minerals){
+					switch(creep.harvest(minerals)){
 						case ERR_NOT_IN_RANGE:
-							creep.moveTo(currentMineral)
+							creep.moveTo(minerals);
 						case ERR_TIRED:
 						case OK:
 							return true;
 					}
 				}
-				// console.log(minerals);
-				// if(mineral){
-				// 	console.log(creep.harvest(mineral), Object.keys(mineral));
-				// 	switch(creep.harvest(mineral)){
+				// let currentMineral;
+				// for(let type in minerals){
+				// 	currentMineral = minerals[ type ];
+				// 	switch(creep.harvest(currentMineral)){
 				// 		case ERR_NOT_IN_RANGE:
-				// 			creep.moveTo(mineral)
+				// 			creep.moveTo(currentMineral);
+				// 		case ERR_TIRED:
 				// 		case OK:
 				// 			return true;
 				// 	}
