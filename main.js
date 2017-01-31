@@ -1,8 +1,6 @@
-const SpawnManager = require('spawn.manager');
-const ActionManager = require('action.manager');
-const { UNIT_TYPES } = require('units.manager');
-const HiveMind = require('hivemind');
 const MemoryLists = require('memory.lists');
+const SpawnManager = require('spawn.manager');
+const Squad = require('squad');
 const {
 	UNITS: {
 		DEFAULT,
@@ -28,28 +26,20 @@ const {
 	},
 } = require('constants');
 
-const setupRooms = () => {
-	Memory.roomsToExplore = Memory.roomsToExplore || [];
-	Memory.exploredRooms = Memory.exploredRooms || [];
-	Memory.botRooms = Memory.botRooms || [];
-	Memory.playerRooms = Memory.playerRooms || [];
-	Memory.battleFields = Memory.battleFields || [];
-	Memory.quarry = Memory.quarry || {};
-	Memory.worksites = Memory.worksites || [];
-	Memory.uplinks = Memory.uplinks || {};
-	Memory.downlinks = Memory.downlinks || {};
-	Memory.terminals = Memory.terminals || {};
-}
 module.exports.loop = () => {
-	// const homeBase = Game.spawns[homeName];
-	setupRooms();
+    //Wipes
+    // const whiteListNames = ["creeps","botRooms","SQUADS","spawns","rooms"];
+    // for(const name in Memory){
+    //     console.log();
+    //     if(whiteListNames.indexOf(name) < 0){
+    //         delete Memory[name];
+    //     }
+    // }
 
-	let creep;
-	let actions;
-	let unitFound;
-	let mySquad;
+	let creep,
+        unitFound,
+        mySquad;
 	const squads = MemoryLists.getSquads();
-
 	for(const index in Memory.creeps) {
 		creep = Game.creeps[index];
 
@@ -59,9 +49,7 @@ module.exports.loop = () => {
 			continue;
 		}
 
-		actions = UNIT_TYPES[ creep.memory.role || DEFAULT ].actions;
-
-		unitFound = false;
+        unitFound = false;
 		for(const index in squads){
 			mySquad = Object.keys(squads[index].squad);
 			if(mySquad.indexOf(creep.name) >= 0){
@@ -70,13 +58,13 @@ module.exports.loop = () => {
 			}
 		}
 		if(!unitFound){
-			ActionManager.doTasks(creep, [SCAVENGE, MINING, WITHDRAW, TRANSFER, UPGRADE]);
+			mySquad = Squad.getParty(Memory.SQUADS[creep.room.name].WORKFORCE[creep.room.name+"_1"]);
+            mySquad.addCreep({
+                name: creep.name,
+                role: creep.memory.role
+            });
 		}
 	}
-
-	//Oversoul
-	HiveMind.sortRooms();
-	HiveMind.handleTasks();
 
 	//Manage Spawns
 	for( const name in Game.spawns ){

@@ -186,11 +186,12 @@ const TASKS = {
 			const numSources = Memory.rooms[ creep.room.name ].SOURCES;
 			let node;
 			if(numSources > 1){
-				node = creep.pos.findClosestByRange(FIND_SOURCES, {
-					filter: structure => {
-						return creep.memory.blocked != structure.id;
-					}
-				});
+				// node = creep.pos.findClosestByRange(FIND_SOURCES, {
+				// 	filter: structure => {
+				// 		return creep.memory.blocked != structure.id;
+				// 	}
+				// });
+				node = creep.pos.findClosestByRange(FIND_SOURCES);
 			}else{
 				node = creep.room.find(FIND_SOURCES)[0];
 			}
@@ -384,7 +385,7 @@ const TASKS = {
 	},
 	[ACTIONS.SETTLE]: creep => {
 		const { room, memory: { destination, busy }} = creep;
-
+		// return;
 		if(room.name != destination){
 			creep.memory.busy = ACTIONS.SETTLE;
 			const path = Game.map.findRoute(room, destination);
@@ -403,7 +404,8 @@ const TASKS = {
 		}else{
 			creep.say("Mine");
 		    const controller = room.controller;
-			switch(creep.claimController(controller)){
+			// switch(creep.claimController(controller)){
+			switch(creep.reserveController(controller)){
 				case ERR_NOT_IN_RANGE:
 					creep.moveTo(controller);
 				case OK:

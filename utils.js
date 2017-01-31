@@ -41,7 +41,7 @@ const isCreepDamagedStructure = structure => {
 	}
 }
 const towerDamagedStructureWhitelist = [
-	STRUCTURE_TOWER, STRUCTURE_WALL, STRUCTURE_RAMPART
+	STRUCTURE_TOWER, STRUCTURE_WALL, STRUCTURE_RAMPART, STRUCTURE_ROAD
 ];
 const isTowerDamagedStructure = structure => {
 	if(towerDamagedStructureWhitelist.indexOf(structure.structureType) >= 0){
@@ -61,7 +61,7 @@ const countUnitsByType = role => {
 }
 const getUnitsWithDestination = (dest, role) => {
 	return _.filter(Game.creeps, creep => {
-		return creep.memory.role == role && 
+		return creep.memory.role == role &&
 			creep.memory.destination == dest;
 	}).length;
 }

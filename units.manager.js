@@ -46,7 +46,9 @@ const UNIT_TYPES = {
 	},
 	[WORKER]:{
 		minParts: 3,
-		parts: [WORK, CARRY, MOVE, WORK, CARRY, MOVE, WORK, WORK, MOVE, WORK, MOVE],
+		parts: [WORK, CARRY, MOVE, WORK, CARRY, MOVE, WORK, WORK, MOVE, WORK,
+			MOVE, CARRY, CARRY, MOVE, WORK, WORK, MOVE, WORK, WORK, WORK, MOVE,
+            CARRY, CARRY, MOVE, MOVE, CARRY, CARRY],
 		// actions: [SCAVENGE, MINING, WITHDRAW, TRANSFER, UPGRADE]
 	},
 	[MEDIC]: {
@@ -133,12 +135,14 @@ const UNIT_TYPES = {
 	},
 
 	[PALADIN]: {
-		minParts: 15,
-		parts: [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, HEAL],
+		minParts: 8,
+		parts: [TOUGH, TOUGH, MOVE, MOVE, MOVE, ATTACK, ATTACK, HEAL],
+		// parts: [TOUGH, TOUGH, TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, MOVE, ATTACK, ATTACK, ATTACK, ATTACK, HEAL, HEAL],
 	},
 	[FOOTMAN]: {
 		minParts: 15,
-		parts: [TOUGH, TOUGH, CARRY, CARRY, CARRY, ATTACK, MOVE, ATTACK, MOVE, MOVE, ATTACK, ATTACK, MOVE, ATTACK, MOVE],
+		parts: [TOUGH, TOUGH, MOVE, MOVE, ATTACK, ATTACK, MOVE, ATTACK, MOVE],
+		// parts: [TOUGH, TOUGH, CARRY, CARRY, CARRY, ATTACK, MOVE, ATTACK, MOVE, MOVE, ATTACK, ATTACK, MOVE, ATTACK, MOVE],
 	},
 	[RIFLEMAN]: {
 		minParts: 8,
@@ -196,7 +200,7 @@ const UnitManager = {
 			return Game.spawns[obj].room.name == home;
 		}) ];
 		if(homeBase.canCreateCreep(parts) == OK){
-			const newName = homeBase.createCreep(parts, undefined, {
+			const newName = homeBase.createCreep(_.sortBy(parts), undefined, {
 				role,
 				home,
 				destination,

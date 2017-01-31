@@ -30,6 +30,7 @@ class Party {
         this.type = props.type || null;
         this.groupName = props.groupName || null;
         this.groupType = props.groupType || null;
+        this.misc = props.misc || {};
     }
     setParty(party){
         //Setup the party list
@@ -119,12 +120,17 @@ class Workers extends Party {
 
         const room = Game.rooms[ this.roomName ];
     	const sources = room.find(FIND_SOURCES);
-
-        this.rooms = this.rooms || {};
-        this.addRoom({room, sources});
+        this.sourcePositions = props.sourcePositions || this.getSourcePositions(room, sources);
+        // for(const pos in this.sourcePositions){
+        //     this.sourcePositions[pos].worker = null;
+        // }
+        this.misc.availableSpots = this.misc.availableSpots || this.sourcePositions.length;
+        this.misc.additionalWorkers = (this.misc.additionalWorkers || 0) + this.checkSources(sources);
 
         this.setParty([
-            { [UNITS.WORKER]: this.getRoom({roomName: this.roomName}).sourcePositions.length * 3},
+            // { [UNITS.WORKER]: this.misc.availableSpots + this.misc.additionalWorkers },
+            // { [UNITS.WORKER]: this.misc.availableSpots * 4 },
+            { [UNITS.WORKER]: (this.misc.availableSpots * 2) + 5},
         ]);
 
         this.update();
@@ -140,13 +146,17 @@ class Workers extends Party {
         // console.log("Units in the squad", this.getUnitNames());
         // console.log("Missing Units", this.getMissingUnits());
     }
-    addRoom({room, sources}){
-        this.rooms[room.name] = this.rooms[room.name] || {
-            sourcePositions: this.getSourcePositions(room, sources)
-        };
-    }
-    getRoom({roomName}){
-        return this.rooms[ roomName ];
+    checkSources(sources){
+        let moreWorkers = 0;
+        let s;
+        for(const index in sources){
+            s = sources[index];
+            if(s.ticksToRegeneration < 10 && s.energy > 0){
+                moreWorkers++;
+            }
+        }
+        return moreWorkers;
+        // console.log("Call for "+moreWorkers+" more workers ("+this.misc.additionalWorkers+")");
     }
     getSourcePositions(room, sources){
         const miningSpots = [];
@@ -168,84 +178,62 @@ class Workers extends Party {
         }
         return miningSpots;
     }
-    findRooms(creep){
-        const exits = Game.map.describeExits( this.roomName );
-        let foundNewRoom;
-        for(var room in exits){
-            if(Memory.roomsToExplore.indexOf(exits[room]) < 0 &&
-                Memory.exploredRooms.indexOf(exits[room]) < 0){
-
-                Memory.roomsToExplore.push( exits[room] );
-                foundNewRoom = true;
-            }
-        }
+    attemptMining({creep, source}){
+        // if(){
+        //
+        // }
+        // console.log("My Creep",creep.name,sources.length);
     }
-    getSourceForCreep(creep){
-        const roomName = creep.room.name;
-        return _.find(this.rooms[roomName].sourcePositions, obj => obj.worker == creep.name)
-            || _.find(this.rooms[roomName].sourcePositions, obj => !obj.worker && Game.getObjectById(obj.id).energy > 0);
+    getUnitsWithTask(task){
+
     }
     delegateTasks(){
         if(!this.roomName){
             return;
         }
         const room = Game.rooms[ this.roomName ];
-        // const sources = room.find(FIND_SOURCES, {
-        //     filter: source => {
-        //         return source.energy > 0;
-        //     }
-        // });
+        const sources = room.find(FIND_SOURCES, {
+            filter: source => {
+                return source.energy > 0;
+            }
+        });
         const droppedSources = room.find(FIND_DROPPED_RESOURCES);
+        this.misc.tasks = this.misc.tasks || {};
+        /*
+            [MINING]: {
+                a: "",
+                b: "",
+                c: ""
+            },
+            tasks {
+                [SCAVENGE]:{
+
+                },
+                [UPGRADE]:{
+
+                }
+            }
+        */
+        // const dropped = {
+        //     needed: droppedSources.length,
+        //     assigned: this.misc.tasks.dropped || 0
+        // }
         let creep;
         let index = 0;
         let source;
         let dropped;
-        let exits;
-        let clearRoom;
 
-        //Clear old worker
-        for(const name in this.rooms){
-            clearRoom = this.rooms[name];
-            for(const index in clearRoom.sourcePositions){
-                source = clearRoom.sourcePositions[index];
-                if(source.worker && !this.squad[source.worker]){
-                    console.log("Clear old workers");
-                    source.worker = null;
-                }
-            }
-        }
         for(const name in this.squad){
             creep = Game.creeps[name];
             if(creep){
+                // if(!creep.memory.busy && _.sum(creep.carry) < creep.carryCapacity){
+                //         source = this.misc.availableSpots;
+                //         this.attemptMining({ creep, source })
+                // }
+
+
                 //See if the creep is carrying anything
-                if(!creep.memory.busy && _.sum(creep.carry) < creep.carryCapacity){
-                    //Check for dropped resources
-
-                    //Go Mining
-                    source = this.getSourceForCreep(creep);
-                    if(source){
-                        if(this.executeTask({
-                            creep,
-                            task: "harvest",
-                            target: Game.getObjectById(source.id),
-                            pos: source.pos
-                        })){
-                            source.worker = creep.name;
-                            continue;
-                        }
-                    }else{
-                        if(this.roomName == "W7N3"){
-                            console.log();
-                            console.log("Need a new source", this.roomName);
-
-                        }
-                    };
-                }else{
-                    source = this.getSourceForCreep(creep);
-                    if(source){
-                        source.worker = null
-                    }
-                }
+                // if(!creep.memory.busy && _.sum(creep.carry) < creep.carryCapacity){
                 //     // //Handle dropped things
                 //     // if(droppedSources.length){
                 //     //     dropped = _.find();
@@ -289,24 +277,25 @@ class Workers extends Party {
 
                 if(creep.room.name != creep.memory.home){
                     ActionManager.doTasks(creep, [GO_HOME]);
-                //     Gather exotic minerals
-                //     ActionManager.doTasks(creep, [HARVEST, STORE]);
-                //     //Dump any materials
-                //     if(!this.dumpCarriedMinerals(creep)){
-                //         ActionManager.doTasks(creep, [SCAVENGE, STORE]);
-                //     };
+                }else if(index == this.misc.availableSpots + 1){
+                    ActionManager.doTasks(creep, [HARVEST, STORE]);
+                }else if(index >= this.misc.availableSpots + 2 && index < this.misc.availableSpots + 7){
+                    //Dump any materials
+                    if(!this.dumpCarriedMinerals(creep)){
+                        ActionManager.doTasks(creep, [SCAVENGE, MINING, STORE]);
+                    };
                 }else{
                     //Dump any materials
                     if(!this.dumpCarriedMinerals(creep)){
                         switch(index % 3){
                             case 0:
-                                ActionManager.doTasks(creep, [SCAVENGE, WITHDRAW, TRANSFER, UPGRADE]);
+                                ActionManager.doTasks(creep, [SCAVENGE, WITHDRAW, MINING, TRANSFER, UPGRADE]);
                                 break;
                             case 1:
-                                ActionManager.doTasks(creep, [SCAVENGE, WITHDRAW, UPGRADE]);
+                                ActionManager.doTasks(creep, [SCAVENGE, WITHDRAW, MINING, UPGRADE]);
                                 break;
                             case 2:
-                                ActionManager.doTasks(creep, [SCAVENGE, WITHDRAW, BUILD, REPAIR, TRANSFER, UPGRADE]);
+                                ActionManager.doTasks(creep, [SCAVENGE, WITHDRAW, MINING, BUILD, REPAIR, TRANSFER, UPGRADE]);
                                 break;
                         }
                     };
@@ -358,7 +347,7 @@ class Warriors extends Party {
         this.setParty([
             // { [UNITS.PALADIN]: 0 },
             // { [UNITS.FOOTMAN]: 2 },
-            // { [UNITS.WORKER]:  },
+            // { [UNITS.WORKER]: this.misc.availableSpots },
         ]);
     }
     gotoRoom(creep, destination){
