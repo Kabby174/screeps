@@ -140,9 +140,11 @@ class Workers extends Party {
         // console.log("Units in the squad", this.getUnitNames());
         // console.log("Missing Units", this.getMissingUnits());
     }
-    addRoom({room, sources}){
-        this.rooms[room.name] = this.rooms[room.name] || {
-            sourcePositions: this.getSourcePositions(room, sources)
+    addRoom({roomName, room, sources, explorer}){
+        const name = roomName || room.name;
+        this.rooms[name] = this.rooms[name] || {
+            sourcePositions: !sources ? null : this.getSourcePositions(room, sources),
+            explorer
         };
     }
     getRoom({roomName}){
@@ -180,7 +182,55 @@ class Workers extends Party {
             }
         }
     }
-    getSourceForCreep(creep){
+    findNewRoom(creep){
+        console.log();
+        console.log("Need a new source", creep.room.name);
+        const roomIndex = Math.max(Object.keys(this.rooms).indexOf(creep.room.name), 0);
+        let exitArray;
+        let room;
+        let roomName;
+        // for(let ii = roomIndex; roomIndex)
+        if(roomIndex == Object.keys(this.rooms).length - 1){
+            console.log("Need to find a new room");
+            exitArray = Game.map.describeExits( creep.room.name );
+			for(const direction in exitArray){
+                roomName = exitArray[direction];
+                room = this.rooms[roomName];
+                if(!room){
+                    //Needs to be charted
+                    console.log("Chart the room", roomName);
+                    this.addRoom({
+                        roomName,
+                        explorer: creep.name
+                    });
+                    // if(!Memory.rooms[ roomName ]){
+                    //     // Memory.rooms
+                    // }
+                }else if(room.sourcePositions){
+                    //All the way handled
+                    console.log("Room Handled", roomName);
+                }else if(!room.explorer){
+                    //Creep must explore room
+                    console.log("Explore the room", roomName);
+                }else{
+                    //See if creep can go to this room
+                    console.log("Heading to room", roomName);
+                }
+            }
+        }else{
+            console.log("See if another room is available");
+        }
+    }
+    isExploringRoom({creep}){
+        return _.find(this.rooms, obj => {
+            if(obj.explorer && !this.squad[obj.explorer]){
+                this.squad[obj.explorer] = null;
+            }
+            console.log("Obj", Object.keys(obj), obj.explorer, creep.name);
+            return !obj.sourcePositions && obj.explorer && obj.explorer == creep.name
+        });
+    }
+    getSourcesInRoom({creep}){
         const roomName = creep.room.name;
         return _.find(this.rooms[roomName].sourcePositions, obj => obj.worker == creep.name)
             || _.find(this.rooms[roomName].sourcePositions, obj => !obj.worker && Game.getObjectById(obj.id).energy > 0);
@@ -218,11 +268,13 @@ class Workers extends Party {
             creep = Game.creeps[name];
             if(creep){
                 //See if the creep is carrying anything
-                if(!creep.memory.busy && _.sum(creep.carry) < creep.carryCapacity){
+                if(this.roomName == "W7N3" && this.isExploringRoom({creep})){
+                    console.log("Head to the room", creep.name);
+                }else if(!creep.memory.busy && _.sum(creep.carry) < creep.carryCapacity){
                     //Check for dropped resources
 
                     //Go Mining
-                    source = this.getSourceForCreep(creep);
+                    source = this.getSourcesInRoom({creep});
                     if(source){
                         if(this.executeTask({
                             creep,
@@ -235,13 +287,11 @@ class Workers extends Party {
                         }
                     }else{
                         if(this.roomName == "W7N3"){
-                            console.log();
-                            console.log("Need a new source", this.roomName);
-
+                            this.findNewRoom(creep);
                         }
                     };
                 }else{
-                    source = this.getSourceForCreep(creep);
+                    source = this.getSourcesInRoom({creep});
                     if(source){
                         source.worker = null
                     }

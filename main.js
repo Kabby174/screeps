@@ -28,13 +28,13 @@ const {
 
 module.exports.loop = () => {
     //Wipes
-    // const whiteListNames = ["creeps","botRooms","SQUADS","spawns","rooms"];
-    // for(const name in Memory){
-    //     console.log();
-    //     if(whiteListNames.indexOf(name) < 0){
-    //         delete Memory[name];
-    //     }
-    // }
+    const whiteListNames = ["creeps","botRooms","SQUADS","spawns","rooms"];
+    for(const name in Memory){
+        console.log();
+        if(whiteListNames.indexOf(name) < 0){
+            delete Memory[name];
+        }
+    }
 
 	let creep,
         unitFound,
