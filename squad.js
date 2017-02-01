@@ -142,6 +142,7 @@ class Workers extends Party {
     }
     addRoom({roomName, room, sources, explorer}){
         const name = roomName || room.name;
+        console.log("My Room", name, this.rooms[name]);
         this.rooms[name] = this.rooms[name] || {
             sourcePositions: !sources ? null : this.getSourcePositions(room, sources),
             explorer
@@ -230,10 +231,51 @@ class Workers extends Party {
             return !obj.sourcePositions && obj.explorer && obj.explorer == creep.name
         });
     }
-    getSourcesInRoom({creep}){
+    getSourceForWorker({creep, name}){
         const roomName = creep.room.name;
-        return _.find(this.rooms[roomName].sourcePositions, obj => obj.worker == creep.name)
-            || _.find(this.rooms[roomName].sourcePositions, obj => !obj.worker && Game.getObjectById(obj.id).energy > 0);
+
+        if(creep.name == name){
+            console.log();
+            console.log("Find",creep.name);
+        }
+        _.find(this.rooms[roomName].sourcePositions, obj => {
+            if(creep.name == name){
+                console.log("0:",obj.id,obj.worker);
+            }
+            return false;
+        });
+        const sourceA = _.find(this.rooms[roomName].sourcePositions, obj => obj.worker == creep.name && Game.getObjectById(obj.id).energy > 0);
+
+        if(creep.name == name){
+            // console.log();
+        }
+        let validWorker;
+        const sourceB = _.find(this.rooms[roomName].sourcePositions, obj => {
+            if(creep.name == name){
+                // console.log("B: Maria", obj.worker, !obj.worker && Game.getObjectById(obj.id).energy > 0);
+            }
+            validWorker = Game.creeps[obj.worker];
+            //Missing Unit
+            // if(obj.worker && (!this.squad[ obj.worker ] || !validWorker)){
+            //     console.log("Steal missing worker");
+            //     return true;
+            // }else if(obj.worker && validWorker && _.sum(validWorker.carry) < validWorker.carryCapacity){
+            //     console.log("That creep was busy");
+            //     return true;
+            // }else{
+            // }
+            return !obj.worker && Game.getObjectById(obj.id).energy > 0
+        });
+        const source = sourceA || sourceB;
+        let temp;
+        if(source){
+            source.worker = creep.name;
+            if(creep.name == name){
+                console.log();
+                console.log("Setup Source", creep.name, source.id);
+            }
+        }
+        return source;
     }
     delegateTasks(){
         if(!this.roomName){
@@ -253,20 +295,12 @@ class Workers extends Party {
         let exits;
         let clearRoom;
 
-        //Clear old worker
-        for(const name in this.rooms){
-            clearRoom = this.rooms[name];
-            for(const index in clearRoom.sourcePositions){
-                source = clearRoom.sourcePositions[index];
-                if(source.worker && !this.squad[source.worker]){
-                    console.log("Clear old workers");
-                    source.worker = null;
-                }
-            }
-        }
+        console.log();
+        let creepName;
         for(const name in this.squad){
             creep = Game.creeps[name];
             if(creep){
+                creepName = creepName || name;
                 //See if the creep is carrying anything
                 if(this.roomName == "W7N3" && this.isExploringRoom({creep})){
                     console.log("Head to the room", creep.name);
@@ -274,7 +308,7 @@ class Workers extends Party {
                     //Check for dropped resources
 
                     //Go Mining
-                    source = this.getSourcesInRoom({creep});
+                    source = this.getSourceForWorker({creep, name});
                     if(source){
                         if(this.executeTask({
                             creep,
@@ -282,7 +316,6 @@ class Workers extends Party {
                             target: Game.getObjectById(source.id),
                             pos: source.pos
                         })){
-                            source.worker = creep.name;
                             continue;
                         }
                     }else{
@@ -291,10 +324,6 @@ class Workers extends Party {
                         }
                     };
                 }else{
-                    source = this.getSourcesInRoom({creep});
-                    if(source){
-                        source.worker = null
-                    }
                 }
                 //     // //Handle dropped things
                 //     // if(droppedSources.length){
@@ -380,6 +409,13 @@ class Workers extends Party {
             }
         }
 
+        let roomName;
+        for(const roomName in this.rooms){
+            _.find(this.rooms[roomName].sourcePositions, obj => {
+                console.log("0:",obj.id,obj.worker);
+                return false;
+            });
+        }
         this.update();
     }
     dumpCarriedMinerals(creep) {

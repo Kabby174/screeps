@@ -67,7 +67,30 @@ module.exports.loop = () => {
 	}
 
 	//Manage Spawns
+	let roomKey;
+	let roomName;
 	for( const name in Game.spawns ){
+		console.log("Spawn",name);
+		roomName = Game.spawns[name].room.name;
+		roomKey = {
+			roomName,
+			level: MemoryLists.LEVEL.ROOM,
+			type: MemoryLists.TYPES.WORKFORCE,
+			groupName: roomName+"_1"
+		};
+
+		if(!MemoryLists.get(roomKey)){
+			MemoryLists.add(Object.assign({}, roomKey, {
+				squad: Squad.createParty({
+					type: Squad.TYPES.WORKERS,
+					props: {
+						roomName,
+						groupName: roomKey.groupName,
+						groupType: roomKey.type,
+					}
+				})
+			}));
+		}
 		SpawnManager.run( Game.spawns[name] );
 	}
 

@@ -278,7 +278,7 @@ const TASKS = {
 		creep.memory.busy = ACTIONS.BUILD;
 		const controller = creep.room.controller;
 		if(controller && controller.my && controller.level < 2){
-			console.log("Controller", controller, controller.level);
+			// console.log("Controller", controller, controller.level);
 			switch(creep.upgradeController(controller)){
 				case ERR_NOT_IN_RANGE:
 					creep.moveTo(controller);
